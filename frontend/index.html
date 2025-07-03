@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream11 Team Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#059669',
+                        accent: '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-md mx-auto px-4 py-4">
+            <h1 class="text-xl font-bold text-gray-900 text-center">
+                🏏 Dream11 Team Analyzer
+            </h1>
+            <p class="text-sm text-gray-600 text-center mt-1">
+                Upload screenshot & get AI analysis
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-md mx-auto px-4 py-6 space-y-6">
+        
+        <!-- Upload Section -->
+        <section class="bg-white rounded-lg shadow-sm border p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Upload Team Screenshot</h2>
+            
+            <!-- File Upload Area -->
+            <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                <input type="file" id="file-input" accept="image/*" class="hidden">
+                <div id="upload-content">
+                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p class="text-gray-600 mb-2">Tap to upload or drag & drop</p>
+                    <p class="text-sm text-gray-400">PNG, JPG up to 5MB</p>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="upload-loading" class="hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-primary font-medium">Processing screenshot...</p>
+                </div>
+            </div>
+
+            <!-- Image Preview -->
+            <div id="image-preview" class="hidden mt-4">
+                <img id="preview-img" class="w-full h-48 object-cover rounded-lg border">
+                <button id="remove-image" class="mt-2 text-sm text-red-600 hover:text-red-800">Remove image</button>
+            </div>
+        </section>
+
+        <!-- Match Details Section -->
+        <section class="bg-white rounded-lg shadow-sm border p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Match Details</h2>
+            
+            <div class="space-y-4">
+                <!-- Team A -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Team A</label>
+                    <select id="team-a" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                        <option value="">Select Team A</option>
+                    </select>
+                </div>
+
+                <!-- Team B -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Team B</label>
+                    <select id="team-b" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                        <option value="">Select Team B</option>
+                    </select>
+                </div>
+
+                <!-- Match Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Match Date</label>
+                    <input type="date" id="match-date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+        </section>
+
+        <!-- Extracted Team Data -->
+        <section id="team-data" class="bg-white rounded-lg shadow-sm border p-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Extracted Team Data</h2>
+            
+            <div id="team-info" class="space-y-4">
+                <!-- Captain & Vice-Captain -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Captain</h4>
+                        <p id="captain-name" class="text-sm text-gray-600 bg-yellow-50 p-2 rounded border">Not detected</p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Vice-Captain</h4>
+                        <p id="vice-captain-name" class="text-sm text-gray-600 bg-blue-50 p-2 rounded border">Not detected</p>
+                    </div>
+                </div>
+
+                <!-- Players List -->
+                <div>
+                    <h3 class="font-medium text-gray-900 mb-2">Players (11)</h3>
+                    <div id="players-list" class="space-y-1"></div>
+                </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button id="analyze-btn" class="w-full mt-6 bg-secondary text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                🤖 Get AI Analysis
+            </button>
+        </section>
+
+        <!-- AI Analysis Section -->
+        <section id="ai-analysis" class="bg-white rounded-lg shadow-sm border p-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">🤖 AI Team Analysis</h2>
+            
+            <div id="analysis-loading" class="hidden text-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mx-auto mb-4"></div>
+                <p class="text-secondary font-medium">Analyzing your team...</p>
+            </div>
+
+            <div id="analysis-content" class="hidden">
+                <div id="analysis-text" class="prose prose-sm max-w-none text-gray-700"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Error Messages -->
+    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-red-500 text-white p-4 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <span id="error-message"></span>
+        </div>
+    </div>
+
+    <!-- Success Messages -->
+    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-green-500 text-white p-4 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <span id="success-message"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

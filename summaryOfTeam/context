@@ -1,0 +1,146 @@
+Project Overview:
+The project is aimed at creating a web application that allows users to:
+
+Upload a screenshot or manually input their Dream11 fantasy cricket team.
+
+Extract team details (like player names, captain, vice-captain) from a screenshot using OCR (Optical Character Recognition).
+
+Display extracted information in a structured JSON format.
+
+Allow the user to enter team and match details manually if OCR fails or for flexibility.
+
+In the future, this could be extended to fetch additional data like match details, weather conditions, and AI-powered analysis of the team’s strength, captain/vice-captain suggestions, etc.
+
+Tech Stack:
+Frontend:
+
+HTML for structure
+
+CSS for styling (TailwindCSS for mobile-first responsive design)
+
+JavaScript for functionality and interaction
+
+OCR Tool:
+
+OCR.space API for extracting player details from screenshots
+
+Backend:
+
+None for this MVP version; the backend will only be a placeholder or simple server integration if needed (using JavaScript and APIs like OCR.space).
+
+Core Features:
+1. Team Extraction from Screenshot (OCR Integration):
+File Upload: Users can upload a screenshot of their Dream11 fantasy team.
+
+OCR Processing: The screenshot is processed through OCR.space API (a service that extracts text from images).
+
+Team Parsing: Extracted text is parsed to identify player names, roles, captain, and vice-captain.
+
+The OCR tool reads the text from the screenshot, and the system maps that text to the players’ names and their roles (batsman, bowler, all-rounder, wicket-keeper), as well as identifying the captain and vice-captain based on markers like "C" or "VC".
+
+2. Manual Data Entry:
+Fallback for OCR: Users can manually input the names of the players, captain, vice-captain, and match details.
+
+Form for Entry: Users can fill out a simple form where they input their fantasy team’s players, captain, vice-captain, and match details (team names, match date).
+
+3. JSON Output:
+Once the team data is extracted (either via OCR or manual input), the app displays the information in JSON format.
+
+The JSON output will look like this:
+
+json
+Copy
+{
+  "players": ["Player 1", "Player 2", "Player 3", ...],
+  "captain": "Player X",
+  "vice_captain": "Player Y",
+  "match": {
+    "team_a": "RCB",
+    "team_b": "PBKS",
+    "match_date": "2025-04-18"
+  }
+}
+Frontend Design (Mobile-First):
+The UI should be responsive (optimized for mobile users). The following components will be part of the frontend:
+
+1. Upload Section:
+File Upload: Allow users to either drag-and-drop or click to select and upload an image file.
+
+Image Handling: Upon image upload, trigger the OCR process and parse the player data.
+
+2. Manual Input Section:
+Player Entry Form: A form where users can manually enter the 11 players’ names. This should also have dropdowns or text fields for:
+
+Selecting the captain and vice-captain.
+
+Inputting match details like team names (e.g., RCB vs PBKS) and match date.
+
+3. Results Display Section:
+JSON Output Area: After the team is extracted or entered manually, display the extracted details in a pretty-printed JSON format. This can be displayed in a code block or a collapsible format for easy reading.
+
+4. UI Design with TailwindCSS:
+Mobile-First: The design should prioritize mobile users by making it responsive. TailwindCSS will help with this by using utility classes like p-4, md:p-6, w-full, etc.
+
+User-Friendly: Include clear buttons for uploading the image and submitting the team details. Provide easy-to-read instructions for uploading and manual entry.
+
+Error Handling: Display error messages if the OCR does not find valid player names or if the match details are missing.
+
+Step-by-Step Breakdown:
+Step 1: Project Setup
+Initialize Frontend: Create the folder structure with index.html, style.css, and script.js for the web app.
+
+Install TailwindCSS: Tailwind will be used for styling to ensure responsiveness across mobile devices.
+
+TailwindCSS setup will allow you to build the UI without worrying about complex media queries and responsiveness issues, ensuring a smooth experience for mobile users.
+
+Step 2: OCR Integration with OCR.space API
+Sign Up for OCR.space: Get an API key from OCR.space after signing up.
+
+File Upload: Create an input field that accepts images (JPG/PNG format). Once the image is uploaded, use JavaScript to send the image to the OCR.space API for processing.
+
+Process and Parse Data: Once the OCR API returns data, parse the text to detect player names, roles, captain, and vice-captain.
+
+Step 3: Manual Input Support
+If the OCR fails or the user prefers to enter the team manually, provide an input form where the user can:
+
+Select each player from a list or enter the name manually.
+
+Choose captain and vice-captain.
+
+Choose match details like the match date and the two teams playing.
+
+Step 4: Display the Extracted Data in JSON Format
+After extraction (either through OCR or manual entry), display the player details, captain, vice-captain, and match data in JSON format. This could be in a collapsible code block or just as plain text, making it easy for the user to view and understand the extracted information.
+
+Step 5: Testing and Validation
+Test with Multiple Screenshots: Ensure that the OCR tool works with different types of team screenshots.
+
+Validate Manual Entry: Confirm that the manually entered details are parsed correctly into JSON.
+
+Mobile Responsiveness: Test the UI on multiple devices and screen sizes to ensure the app is responsive and user-friendly.
+
+Future Extensions:
+Once the OCR and manual entry features are functional, you can move to the next stages where:
+
+Fetch Match Details: Add integration to fetch match details, weather conditions, and head-to-head statistics using free APIs (like OpenWeatherMap API for weather and ESPNcricinfo for match data).
+
+AI Analysis: Add AI-powered analysis using OpenAI to suggest how well the team is balanced, identify potential risks, and recommend captain/vice-captain choices based on form and stats.
+
+Team Performance Insights: Use player form data, team performance, and match conditions to analyze the best possible fantasy team combinations.
+
+Project Summary:
+MVP Features:
+OCR-based team extraction (player names, captain, vice-captain).
+
+Manual entry support if OCR fails.
+
+Display of extracted data in a user-friendly JSON format.
+
+Simple, mobile-first design using TailwindCSS.
+
+Next Steps (Future Phases):
+Match data fetching (weather, venue, head-to-head).
+
+Player statistics and form data retrieval (via APIs).
+
+AI-based team analysis and suggestions.
