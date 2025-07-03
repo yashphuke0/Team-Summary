@@ -1,175 +1,175 @@
-# Dream11 Fantasy Cricket Team Analyzer
+# Dream11 Team Analyzer - Setup Guide
 
-A web application that allows users to upload screenshots of their Dream11 fantasy cricket teams or manually input team details, extract player information using OCR, and display the data in a structured JSON format.
+## Quick Start
 
-## 🚀 Features
+### Prerequisites
+- Node.js 16+ installed
+- OCR.space API key (free)
+- OpenAI API key (optional, for AI analysis)
 
-### Core Features
-- **Screenshot Upload & OCR Processing**: Upload Dream11 team screenshots and automatically extract player details using OCR.space API
-- **Manual Team Entry**: Fallback option to manually input player names, captain, vice-captain, and match details
-- **JSON Output**: Display extracted team information in a clean, structured JSON format
-- **Mobile-First Design**: Responsive UI optimized for mobile devices using TailwindCSS
+### Step 1: Clone/Download Project
 
-### Current Capabilities
-- Extract player names from screenshots
-- Identify captain and vice-captain (marked with "C" and "VC")
-- Parse match details (team names, match date)
-- Fallback manual entry system
-- Mobile-responsive interface
-
-## 🛠️ Tech Stack
-
-**Frontend:**
-- HTML5 for structure
-- CSS3 with TailwindCSS for responsive styling
-- Vanilla JavaScript for functionality and interactions
-
-**APIs:**
-- OCR.space API for text extraction from images
-
-**Backend:**
-- Currently MVP version with no backend
-- Future backend integration planned
-
-## 📋 Prerequisites
-
-- Modern web browser
-- OCR.space API key (free tier available)
-- Internet connection for API calls
-
-## 🚀 Getting Started
-
-### Installation
-
-1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd dream11-team-analyzer
+# If you have the project files, navigate to the project directory
+cd Dream11-Team-Analyzer
+
+# Your project structure should look like:
+# ├── frontend/
+# │   ├── index.html
+# │   └── script.js
+# ├── backend/
+# │   ├── server.js
+# │   ├── package.json
+# │   └── env-example.txt
+# ├── README.md
+# └── SETUP.md
 ```
 
-2. Set up TailwindCSS:
+### Step 2: Get API Keys
+
+#### OCR.space API Key (Free - Required)
+1. Go to [OCR.space API](https://ocr.space/ocrapi)
+2. Click "Register for Free API Key"
+3. Enter your email and get your API key
+4. Free tier: 25,000 requests/month
+
+#### OpenAI API Key (Optional - For AI Analysis)
+1. Go to [OpenAI API Keys](https://platform.openai.com/api-keys)
+2. Sign up/Login and create a new API key
+3. Copy the key (starts with `sk-`)
+4. Note: This costs money per request
+
+### Step 3: Backend Setup
+
 ```bash
-# Install via CDN (recommended for MVP) or
-# npm install -D tailwindcss
+# Navigate to backend folder
+cd backend
+
+# Install dependencies
+npm install
+
+# Create environment file from template
+cp env-example.txt .env
+
+# Edit .env file with your API keys
 ```
 
-3. Get your OCR.space API key:
-   - Sign up at [OCR.space](https://ocr.space/ocrapi)
-   - Get your free API key
-   - Add it to your JavaScript configuration
-
-### Project Structure
-```
-dream11-team-analyzer/
-├── index.html          # Main HTML file
-├── style.css           # Custom styles
-├── script.js           # JavaScript functionality
-├── README.md           # Project documentation
-└── summaryOfTeam/
-    └── context         # Project context file
+Edit `backend/.env` file:
+```env
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+OCR_API_KEY=your_ocr_space_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-## 🎯 Usage
+**Important:** Replace `your_ocr_space_api_key_here` with your actual OCR.space API key!
 
-### Screenshot Upload Method
-1. Open the web application
-2. Click on the upload area or drag and drop your Dream11 team screenshot
-3. Wait for OCR processing to complete
-4. Review the extracted team details in JSON format
-
-### Manual Entry Method
-1. Use the manual input form if OCR fails or for custom entry
-2. Enter player names (11 players total)
-3. Select captain and vice-captain
-4. Add match details (teams and date)
-5. Submit to generate JSON output
-
-### Expected JSON Output Format
-```json
-{
-  "players": ["Player 1", "Player 2", "Player 3", "..."],
-  "captain": "Player X",
-  "vice_captain": "Player Y",
-  "match": {
-    "team_a": "RCB",
-    "team_b": "PBKS",
-    "match_date": "2025-04-18"
-  }
-}
+```bash
+# Start the backend server
+npm start
 ```
 
-## 🔧 Configuration
-
-### OCR.space API Setup
-1. Replace the API key in `script.js`:
-```javascript
-const OCR_API_KEY = 'your-ocr-space-api-key';
+You should see:
+```
+✅ Server running on http://localhost:3001
+✅ OCR API configured
+✅ OpenAI API configured (or ❌ if not configured)
 ```
 
-2. Configure API settings as needed:
-   - Image format support: JPG, PNG
-   - Language: English (default)
-   - OCR Engine: 2 (recommended)
+### Step 4: Frontend Setup
 
-## 📱 Mobile Responsiveness
+Open a **new terminal window** and:
 
-The application is built with a mobile-first approach using TailwindCSS:
-- Responsive grid layouts
-- Touch-friendly interface elements
-- Optimized for various screen sizes
-- Progressive enhancement for desktop users
+```bash
+# Navigate to frontend folder (from project root)
+cd frontend
 
-## 🔄 Future Enhancements
+# Start a simple HTTP server
+python -m http.server 3000
+```
 
-### Phase 2: Data Integration
-- **Match Data Fetching**: Integration with cricket APIs for live match details
-- **Weather Conditions**: OpenWeatherMap API integration for venue weather
-- **Player Statistics**: Real-time player form and statistics
+**Alternative methods:**
+```bash
+# Using Node.js http-server
+npx http-server -p 3000 -c-1
 
-### Phase 3: AI Analysis
-- **Team Analysis**: AI-powered team strength evaluation
-- **Captain Suggestions**: Data-driven captain/vice-captain recommendations
-- **Performance Insights**: Team combination optimization
+# Using VS Code Live Server extension
+# Right-click index.html → "Open with Live Server"
+```
 
-### Phase 4: Advanced Features
-- **Head-to-Head Statistics**: Historical team performance data
-- **Venue Analysis**: Pitch conditions and historical data
-- **Player Form Tracking**: Recent performance metrics
+### Step 5: Test the Application
 
-## 🧪 Testing
+1. **Open browser:** `http://localhost:3000`
+2. **Verify backend:** `http://localhost:3001/api/health`
+3. **Upload test:** Try uploading a Dream11 screenshot
+4. **Check console:** Look for any errors in browser developer tools
 
-### OCR Testing
-- Test with various screenshot qualities
-- Validate different team formats
-- Ensure accurate captain/vice-captain detection
+## 📱 How to Use
 
-### Mobile Testing
-- Test across different mobile devices
-- Verify responsive design elements
-- Check touch interactions
+### 1. Upload Dream11 Screenshot
+- Take a screenshot of your Dream11 team selection screen
+- Make sure player names are clearly visible
+- Drag & drop or click to upload (JPG/PNG, max 5MB)
 
-## 🤝 Contributing
+### 2. Fill Match Details
+- **Team A & B:** Select from IPL 2025 teams dropdown
+- **Match Date:** Choose the match date
+- **Important:** Teams must be different
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### 3. View Extracted Data
+- App will automatically extract 11 players
+- Captain (C) and Vice-Captain (VC) will be detected
+- Review the extracted information
 
-## 📄 License
+### 4. Get AI Analysis (Optional)
+- Click "🤖 Get AI Analysis" if you have OpenAI API key
+- Wait for detailed team analysis and suggestions
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 🛠️ Troubleshooting
 
-## 🆘 Support
+### Common Issues
 
-For support, please open an issue in the GitHub repository or contact the development team.
+#### Backend Won't Start
+```bash
+# Check if Node.js is installed
+node --version
 
-## 🙏 Acknowledgments
+# Should show v16+ or higher
+# If not installed, download from https://nodejs.org
+```
 
-- OCR.space for providing the OCR API
-- TailwindCSS for the responsive design framework
-- Dream11 for the fantasy cricket platform inspiration
+#### "OCR API key not configured"
+1. Check your `.env` file exists in `backend/` folder
+2. Verify the API key is correct (no extra spaces)
+3. Restart backend server after editing `.env`
 
----
+#### Frontend Shows Blank Page
+1. Make sure you're accessing `http://localhost:3000`
+2. Check browser console for JavaScript errors
+3. Verify frontend server is running
 
-**Note**: This is currently an MVP version focusing on core OCR and manual entry functionality. Advanced features and AI analysis will be added in future releases. 
+#### "Failed to fetch" Error
+1. **Check backend is running:** Go to `http://localhost:3001/api/health`
+2. **Port conflicts:** Make sure nothing else uses port 3001
+3. **CORS issues:** Ensure frontend runs on port 3000
+
+#### OCR Not Detecting Players
+1. **Screenshot quality:** Ensure text is clear and readable
+2. **Supported format:** Use JPG or PNG only
+3. **File size:** Keep under 5MB
+4. **Player names visible:** Names should be clearly visible in screenshot
+
+#### Captain/Vice-Captain Not Detected
+- Make sure C and VC markers are visible in screenshot
+- The improved detection looks for C/VC markers near player names
+- If still not working, you can see debug info in backend terminal
+
+### Development Mode
+
+For development with auto-reload:
+
+```bash
+# Backend with nodemon
+cd backend
+npm run dev
