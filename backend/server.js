@@ -19,7 +19,7 @@ const openai = new OpenAI({
 // IPL 2025 Teams
 const iplTeams = [
     'Chennai Super Kings',
-    'Mumbai Indians', 
+    'Mumbai Indians',
     'Royal Challengers Bangalore',
     'Kolkata Knight Riders',
     'Delhi Capitals',
@@ -33,9 +33,10 @@ const iplTeams = [
 // Middleware
 app.use(helmet());
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
+    origin: '*',
 }));
+app.use(express.json());
+
 
 // Rate limiting
 const limiter = rateLimit({
@@ -105,15 +106,15 @@ async function processImageWithOCR(imageBuffer) {
 
 function parseTeamDataFromOCRText(ocrText) {
     const lines = ocrText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    
+
     const players = [];
-    
+
     // First pass: collect all player names
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        
+
         // Skip common non-player text
-        if (line.toLowerCase().includes('dream11') || 
+        if (line.toLowerCase().includes('dream11') ||
             line.toLowerCase().includes('points') ||
             line.toLowerCase().includes('team') ||
             line.toLowerCase().includes('match') ||
@@ -185,7 +186,7 @@ app.post('/api/ocr/process', strictLimiter, upload.single('image'), async (req, 
 
         // Process image with OCR
         const ocrText = await processImageWithOCR(req.file.buffer);
-        
+
         // Parse team data from OCR text
         const teamData = parseTeamDataFromOCRText(ocrText);
 
@@ -282,7 +283,7 @@ Keep the analysis concise but informative, focusing on fantasy cricket strategy.
 
     } catch (error) {
         console.error('AI analysis error:', error);
-        
+
         if (error.code === 'insufficient_quota') {
             res.status(429).json({
                 success: false,
@@ -305,7 +306,7 @@ Keep the analysis concise but informative, focusing on fantasy cricket strategy.
 // Error handling middleware
 app.use((error, req, res, next) => {
     console.error('Server error:', error);
-    
+
     if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
