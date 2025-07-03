@@ -18,7 +18,7 @@ const iplTeams = [
 // DOM Elements
 let fileInput, uploadArea, uploadContent, uploadLoading, imagePreview, previewImg, removeImageBtn;
 let teamASelect, teamBSelect, matchDateInput;
-let teamDataSection, playersListDiv, captainNameEl, viceCaptainNameEl, analyzeBtn;
+let teamDataSection, playersListDiv, playerCountEl, captainSelect, viceCaptainSelect, captainNameEl, viceCaptainNameEl, analyzeBtn;
 let aiAnalysisSection, analysisLoading, analysisContent, analysisText;
 let errorToast, errorMessage, successToast, successMessage;
 
@@ -52,6 +52,9 @@ function initializeElements() {
     // Team data elements
     teamDataSection = document.getElementById('team-data');
     playersListDiv = document.getElementById('players-list');
+    playerCountEl = document.getElementById('player-count');
+    captainSelect = document.getElementById('captain-select');
+    viceCaptainSelect = document.getElementById('vice-captain-select');
     captainNameEl = document.getElementById('captain-name');
     viceCaptainNameEl = document.getElementById('vice-captain-name');
     analyzeBtn = document.getElementById('analyze-btn');
@@ -80,6 +83,10 @@ function initializeEventListeners() {
     // Team selection events
     teamASelect.addEventListener('change', validateTeamSelection);
     teamBSelect.addEventListener('change', validateTeamSelection);
+
+    // Captain and Vice-Captain selection events
+    captainSelect.addEventListener('change', handleCaptainSelection);
+    viceCaptainSelect.addEventListener('change', handleViceCaptainSelection);
 
     // Analyze button
     analyzeBtn.addEventListener('click', analyzeTeam);
@@ -173,6 +180,12 @@ function removeImage() {
     uploadContent.classList.remove('hidden');
     teamDataSection.classList.add('hidden');
     aiAnalysisSection.classList.add('hidden');
+    
+    // Reset captain and vice-captain dropdowns
+    if (captainSelect) {
+        captainSelect.innerHTML = '<option value="">Choose Captain</option>';
+        viceCaptainSelect.innerHTML = '<option value="">Choose Vice-Captain</option>';
+    }
 }
 
 async function processImage(file) {
@@ -224,23 +237,82 @@ function displayTeamData(data) {
     playersListDiv.innerHTML = '';
     data.players.forEach((player, index) => {
         const playerDiv = document.createElement('div');
-        playerDiv.className = 'flex items-center justify-between py-1 px-2 bg-gray-50 rounded text-sm';
-        playerDiv.innerHTML = `
-            <span>${index + 1}. ${player}</span>
-            ${player === data.captain ? '<span class="text-yellow-600 font-bold">C</span>' : ''}
-            ${player === data.vice_captain ? '<span class="text-blue-600 font-bold">VC</span>' : ''}
-        `;
+        playerDiv.className = 'flex items-center py-1 px-2 bg-gray-50 rounded text-sm';
+        playerDiv.innerHTML = `<span>${index + 1}. ${player}</span>`;
         playersListDiv.appendChild(playerDiv);
     });
 
-    // Display captain and vice-captain
-    captainNameEl.textContent = data.captain || 'Not detected';
-    viceCaptainNameEl.textContent = data.vice_captain || 'Not detected';
+    // Update player count
+    playerCountEl.textContent = data.players.length;
+
+    // Populate captain and vice-captain dropdowns
+    populateCaptainDropdowns(data.players);
+
+    // Reset captain and vice-captain selections
+    captainNameEl.textContent = 'Not selected';
+    viceCaptainNameEl.textContent = 'Not selected';
 
     // Show team data section
     teamDataSection.classList.remove('hidden');
 
     // Enable analyze button if match details are filled
+    updateAnalyzeButton();
+}
+
+function populateCaptainDropdowns(players) {
+    // Clear existing options (except the first default option)
+    captainSelect.innerHTML = '<option value="">Choose Captain</option>';
+    viceCaptainSelect.innerHTML = '<option value="">Choose Vice-Captain</option>';
+
+    // Add players to both dropdowns
+    players.forEach(player => {
+        const captainOption = document.createElement('option');
+        captainOption.value = player;
+        captainOption.textContent = player;
+        captainSelect.appendChild(captainOption);
+
+        const vcOption = document.createElement('option');
+        vcOption.value = player;
+        vcOption.textContent = player;
+        viceCaptainSelect.appendChild(vcOption);
+    });
+}
+
+function handleCaptainSelection() {
+    const selectedCaptain = captainSelect.value;
+    if (selectedCaptain) {
+        captainNameEl.textContent = selectedCaptain;
+        extractedTeamData.captain = selectedCaptain;
+        
+        // Remove selected captain from vice-captain dropdown if it's selected there
+        if (viceCaptainSelect.value === selectedCaptain) {
+            viceCaptainSelect.value = '';
+            viceCaptainNameEl.textContent = 'Not selected';
+            extractedTeamData.vice_captain = '';
+        }
+    } else {
+        captainNameEl.textContent = 'Not selected';
+        extractedTeamData.captain = '';
+    }
+    updateAnalyzeButton();
+}
+
+function handleViceCaptainSelection() {
+    const selectedViceCaptain = viceCaptainSelect.value;
+    if (selectedViceCaptain) {
+        viceCaptainNameEl.textContent = selectedViceCaptain;
+        extractedTeamData.vice_captain = selectedViceCaptain;
+        
+        // Remove selected vice-captain from captain dropdown if it's selected there
+        if (captainSelect.value === selectedViceCaptain) {
+            captainSelect.value = '';
+            captainNameEl.textContent = 'Not selected';
+            extractedTeamData.captain = '';
+        }
+    } else {
+        viceCaptainNameEl.textContent = 'Not selected';
+        extractedTeamData.vice_captain = '';
+    }
     updateAnalyzeButton();
 }
 
@@ -261,8 +333,9 @@ function updateAnalyzeButton() {
     const hasTeamData = extractedTeamData && extractedTeamData.players.length > 0;
     const hasMatchDetails = teamASelect.value && teamBSelect.value && matchDateInput.value;
     const teamsAreDifferent = teamASelect.value !== teamBSelect.value;
+    const hasCaptainAndVC = extractedTeamData && extractedTeamData.captain && extractedTeamData.vice_captain;
 
-    analyzeBtn.disabled = !(hasTeamData && hasMatchDetails && teamsAreDifferent);
+    analyzeBtn.disabled = !(hasTeamData && hasMatchDetails && teamsAreDifferent && hasCaptainAndVC);
 }
 
 async function analyzeTeam() {
