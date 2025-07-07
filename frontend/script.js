@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:3001/api';
 const iplTeams = [
     'Chennai Super Kings',
     'Mumbai Indians', 
-    'Royal Challengers Bangalore',
+    'Royal Challengers Bengaluru',
     'Kolkata Knight Riders',
     'Delhi Capitals',
     'Punjab Kings',
@@ -349,44 +349,22 @@ async function analyzeTeam() {
     }
 
     try {
-        showAnalysisLoading(true);
-        aiAnalysisSection.classList.remove('hidden');
-
-        const analysisData = {
-            players: extractedTeamData.players,
-            captain: extractedTeamData.captain,
-            vice_captain: extractedTeamData.vice_captain,
+        // Create URL parameters for results page
+        const params = new URLSearchParams({
             teamA: teamASelect.value,
             teamB: teamBSelect.value,
-            matchDate: matchDateInput.value
-        };
-
-        const response = await fetch(`${API_BASE_URL}/analyze`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(analysisData)
+            matchDate: matchDateInput.value,
+            captain: extractedTeamData.captain,
+            viceCaptain: extractedTeamData.vice_captain,
+            players: JSON.stringify(extractedTeamData.players)
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (data.success) {
-            displayAnalysis(data.analysis);
-            showSuccess('AI analysis completed!');
-        } else {
-            throw new Error(data.message || 'Failed to analyze team');
-        }
+        // Redirect to results page
+        window.location.href = `results.html?${params.toString()}`;
 
     } catch (error) {
-        console.error('Error analyzing team:', error);
-        showError('Failed to analyze team. Please try again.');
-    } finally {
-        showAnalysisLoading(false);
+        console.error('Error redirecting to results:', error);
+        showError('Failed to proceed to analysis. Please try again.');
     }
 }
 
