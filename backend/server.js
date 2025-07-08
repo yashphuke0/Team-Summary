@@ -97,38 +97,15 @@ const upload = multer({
 
 // OCR Service Functions
 async function processImageWithOCR(imageBuffer) {
-    try {
-        // Check if OCR API key is configured
-        if (!process.env.OCR_API_KEY || process.env.OCR_API_KEY === 'your_ocr_space_api_key_here') {
-            console.warn('OCR API key not configured, using fallback text extraction');
-            // Return a sample team structure for demo purposes
-            return `V Kohli
-126 Pts
-21
-WICKET-KEEPERS
-P Salt
-42 Pts
-BATTERS
-R Patidar
-54 Pts
-ALL-ROUNDERS
-P Arya
-52 Pts
-M Stoinis
-16 Pts
-K Pandya
-94 Pts
-BOWLERS
-B Kumar
-82 Pts
-J Hazlewood
-52.5 Pts
-Y Chahal
-37 Pts
-A Singh
-120 Pts`;
-        }
+    console.log('Received OCR processing request');
+    console.log(`Processing image: ${imageBuffer.length} bytes`);
+    
+    // Check if OCR API key is configured
+    if (!process.env.OCR_API_KEY || process.env.OCR_API_KEY === 'your_ocr_space_api_key_here') {
+        throw new Error('OCR API key not configured. Please set OCR_API_KEY in your .env file. Get a free key from https://ocr.space/ocrapi');
+    }
 
+    try {
         const formData = new FormData();
         formData.append('file', imageBuffer, {
             filename: 'image.jpg',
@@ -136,68 +113,62 @@ A Singh
         });
         formData.append('apikey', process.env.OCR_API_KEY);
         formData.append('language', 'eng');
-        formData.append('OCREngine', '2');
-        formData.append('detectOrientation', 'false');
+        formData.append('OCREngine', '1');
+        formData.append('detectOrientation', 'true');
         formData.append('isTable', 'false');
+        formData.append('scale', 'true');
 
-        console.log('Attempting OCR processing...');
+        console.log('Attempting OCR processing with API...');
         
         const response = await axios.post('https://api.ocr.space/parse/image', formData, {
             headers: {
                 ...formData.getHeaders(),
             },
-            timeout: 60000, // Increased to 60 seconds timeout
+            timeout: 15000, // Reduced to 15 seconds for faster fallback
+            maxRedirects: 3,
+            validateStatus: function (status) {
+                return status < 500; // Resolve only if the status code is less than 500
+            }
         });
 
         if (response.data && response.data.ParsedResults && response.data.ParsedResults.length > 0) {
             const extractedText = response.data.ParsedResults[0].ParsedText;
-            console.log('OCR processing successful');
+            console.log('✅ OCR processing successful');
+            console.log('Extracted text from your image:', extractedText);
             return extractedText;
         } else {
-            throw new Error('No text detected in image');
+            throw new Error('No text detected in the uploaded image. Please ensure the image is clear and contains visible player names.');
         }
     } catch (error) {
         console.error('OCR Error:', error.message);
         
-        // If it's a timeout or network error, provide a helpful fallback
-        if (error.message.includes('timeout') || error.message.includes('ECONNABORTED')) {
-            console.warn('OCR timeout occurred, using demo team data');
-            // Return your actual team data as fallback
-            return `V Kohli
-126 Pts
-21
-WICKET-KEEPERS
-P Salt
-42 Pts
-BATTERS
-R Patidar
-54 Pts
-ALL-ROUNDERS
-P Arya
-52 Pts
-M Stoinis
-16 Pts
-K Pandya
-94 Pts
-BOWLERS
-B Kumar
-82 Pts
-J Hazlewood
-52.5 Pts
-Y Chahal
-37 Pts
-A Singh
-120 Pts`;
+        // Handle various types of network and timeout errors
+        const isNetworkError = 
+            error.code === 'ETIMEDOUT' || 
+            error.code === 'ECONNABORTED' || 
+            error.code === 'ENOTFOUND' ||
+            error.code === 'ECONNREFUSED' ||
+            error.message.includes('timeout') || 
+            error.message.includes('ETIMEDOUT') ||
+            error.message.includes('network') ||
+            error.message.includes('connect');
+            
+        if (isNetworkError) {
+            throw new Error('Unable to connect to OCR service. Please check your internet connection and try again.');
         }
         
-        throw new Error(`OCR processing failed: ${error.message}`);
+        // Re-throw the original error
+        throw error;
     }
 }
+
+// Removed fallback function - now using only real OCR data from uploaded images
 
 function parseTeamDataFromOCRText(ocrText) {
     const lines = ocrText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
-    console.log('Parsing OCR text for team data:', lines);
+    console.log('📝 Parsing OCR text for team data. Total lines:', lines.length);
+    console.log('Raw OCR lines:', lines);
 
     const players = [];
     let currentRole = '';
@@ -223,30 +194,109 @@ function parseTeamDataFromOCRText(ocrText) {
             continue;
         }
         
-        // Skip common non-player text
-        if (line.toLowerCase().includes('dream11') ||
+        // Comprehensive filter for non-player text
+        const skipLine = (
+            // Dream11 UI elements
+            line.toLowerCase().includes('dream11') ||
             line.toLowerCase().includes('pts') ||
             line.toLowerCase().includes('team') ||
             line.toLowerCase().includes('match') ||
-            /^\d+$/.test(line) || // Skip pure numbers
-            line.toLowerCase() === 'ot' || // Skip "OT"
-            line.length < 3) {
+            line.toLowerCase().includes('save') ||
+            line.toLowerCase().includes('selected') ||
+            line.toLowerCase().includes('edit') ||
+            line.toLowerCase().includes('confirm') ||
+            line.toLowerCase().includes('submit') ||
+            line.toLowerCase().includes('preview') ||
+            line.toLowerCase().includes('credits') ||
+            line.toLowerCase().includes('remaining') ||
+            line.toLowerCase().includes('balance') ||
+            
+            // Team abbreviations and common misreadings
+            /^(CSK|MI|RCB|KKR|DC|PBKS|RR|SRH|GT|LSG|DT|RC|KK|PB|SR|GU|LS)$/i.test(line) ||
+            
+            // Position labels
+            line.toLowerCase().includes('wicket') ||
+            line.toLowerCase().includes('keeper') ||
+            line.toLowerCase().includes('batter') ||
+            line.toLowerCase().includes('batsman') ||
+            line.toLowerCase().includes('rounder') ||
+            line.toLowerCase().includes('bowler') ||
+            line.toLowerCase().includes('captain') ||
+            
+            // Numbers and points
+            /^\d+$/.test(line) || // Pure numbers
+            /^\d+\.\d+$/.test(line) || // Decimal numbers
+            /^\d+\s*pts?$/i.test(line) || // Numbers with pts
+            
+            // Captain/Vice-captain markers
+            line.toLowerCase() === 'c' ||
+            line.toLowerCase() === 'vc' ||
+            line.toLowerCase() === 'captain' ||
+            line.toLowerCase() === 'vice' ||
+            
+            // Common OCR artifacts
+            line.toLowerCase() === 'ot' ||
+            line.toLowerCase() === 'o' ||
+            line.toLowerCase() === 't' ||
+            /^[.,;:!@#$%^&*()_+\-=\[\]{}|\\:";'<>?,./]$/.test(line) || // Special characters only
+            
+            // Too short or invalid
+            line.length < 2 ||
+            line.length > 25 || // Too long to be a player name
+            
+            // Common UI text patterns
+            /^(tap|click|select|choose|add|remove|delete|cancel|ok|yes|no)$/i.test(line)
+        );
+        
+        if (skipLine) {
+            console.log(`❌ Filtered out: "${line}" (non-player text)`);
             continue;
         }
 
-        // Check if this line is a player name
-        if (/^[A-Za-z\s\.]{2,}$/.test(line) && 
-            !line.includes('(') && 
-            !line.includes(')') &&
-            !line.toLowerCase().includes('wicket') &&
-            !line.toLowerCase().includes('batter') &&
-            !line.toLowerCase().includes('rounder') &&
-            !line.toLowerCase().includes('bowler')) {
+        // Strict player name validation
+        const isValidPlayerName = (
+            // Must contain letters, spaces, dots, hyphens, apostrophes only
+            /^[A-Za-z\s\.\-']{2,}$/.test(line) &&
             
-            players.push({
-                name: line,
-                role: currentRole || 'Unknown'
-            });
+            // Must have at least one letter
+            /[A-Za-z]/.test(line) &&
+            
+            // Should not be all caps single words (likely team names or UI elements)
+            !(line.length <= 4 && line === line.toUpperCase()) &&
+            
+            // Should not contain brackets
+            !line.includes('(') &&
+            !line.includes(')') &&
+            !line.includes('[') &&
+            !line.includes(']') &&
+            
+            // Should not be common cricket terms
+            !['BATTING', 'BOWLING', 'FIELDING', 'EXTRAS', 'TOTAL', 'RUNS', 'WICKETS', 'OVERS'].includes(line.toUpperCase()) &&
+            
+            // Should have reasonable format for a name (at least one space or be a single word of reasonable length)
+            (line.includes(' ') || (line.length >= 3 && line.length <= 15))
+        );
+
+        if (isValidPlayerName) {
+            // Clean the player name thoroughly
+            let cleanName = line
+                .replace(/\d+/g, '') // Remove all numbers
+                .replace(/pts?/gi, '') // Remove points references
+                .replace(/\s+/g, ' ') // Normalize spaces
+                .trim();
+            
+            // Final validation after cleaning
+            if (cleanName.length >= 2 && cleanName.length <= 20 && /^[A-Za-z\s\.\-']+$/.test(cleanName)) {
+                console.log(`✅ Player found: "${cleanName}" (${currentRole || 'Unknown'})`);
+                players.push({
+                    name: cleanName,
+                    role: currentRole || 'Unknown'
+                });
+            } else {
+                console.log(`❌ Rejected after cleaning: "${line}" -> "${cleanName}" (failed final validation)`);
+            }
+        } else {
+            console.log(`❌ Invalid name format: "${line}"`);
         }
     }
 
@@ -255,11 +305,14 @@ function parseTeamDataFromOCRText(ocrText) {
         index === self.findIndex(p => p.name === player.name)
     );
 
-    console.log(`Extracted ${uniquePlayers.length} players:`, uniquePlayers);
+    console.log(`🎯 Final Results: Extracted ${uniquePlayers.length} unique players:`);
+    uniquePlayers.forEach((player, index) => {
+        console.log(`  ${index + 1}. ${player.name} (${player.role})`);
+    });
 
-    // Find captain and vice-captain based on your data
-    const captain = uniquePlayers.find(p => p.name === 'V Kohli') ? 'V Kohli' : '';
-    const viceCaptain = uniquePlayers.find(p => p.name === 'A Singh') ? 'A Singh' : '';
+    // Captain and vice-captain will be handled manually by the user
+    const captain = '';
+    const viceCaptain = '';
 
     return {
         players: uniquePlayers.map(p => p.name).slice(0, 11), // Ensure max 11 players
@@ -322,24 +375,36 @@ app.post('/api/ocr/process', strictLimiter, upload.single('image'), async (req, 
         res.json({
             success: true,
             data: teamData,
-            message: `Successfully extracted ${teamData.players.length} players`,
-            fallbackUsed: !process.env.OCR_API_KEY || process.env.OCR_API_KEY === 'your_ocr_space_api_key_here'
+            message: `Successfully extracted ${teamData.players.length} players from your uploaded image`,
+            extractedFromImage: true
         });
 
     } catch (error) {
         console.error('OCR processing error:', error);
         
-        // Provide detailed error information
         const errorMessage = error.message || 'Failed to process image';
-        const isTimeoutError = errorMessage.includes('timeout') || errorMessage.includes('ECONNABORTED');
+        const isNetworkError = errorMessage.includes('Unable to connect') || errorMessage.includes('timeout');
+        const isAPIKeyError = errorMessage.includes('OCR API key not configured');
         
-        res.status(500).json({
+        let statusCode = 500;
+        let suggestion = 'Please try again with a clear Dream11 screenshot.';
+        
+        if (isAPIKeyError) {
+            statusCode = 400;
+            suggestion = 'Please configure your OCR API key in the .env file. Get a free key from https://ocr.space/ocrapi';
+        } else if (isNetworkError) {
+            statusCode = 503;
+            suggestion = 'Please check your internet connection and try again.';
+        } else if (errorMessage.includes('No text detected')) {
+            statusCode = 400;
+            suggestion = 'Please upload a clear Dream11 screenshot with visible player names.';
+        }
+        
+        res.status(statusCode).json({
             success: false,
             message: errorMessage,
-            isTimeoutError: isTimeoutError,
-            suggestion: isTimeoutError ? 
-                'The OCR service timed out. Try again with a smaller image or check your internet connection.' :
-                'Unable to process the image. Please try again or use a different image.'
+            suggestion: suggestion,
+            requiresAPIKey: isAPIKeyError
         });
     }
 });
