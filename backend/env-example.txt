@@ -7,6 +7,11 @@ PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 
+# Supabase Configuration (for testing)
+# Get these from your Supabase project settings -> API
+SUPABASE_URL=your_supabase_project_url_here
+SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
 # OCR.space API Configuration
 # Get your free API key from: https://ocr.space/ocrapi
 OCR_API_KEY=your_ocr_space_api_key_here

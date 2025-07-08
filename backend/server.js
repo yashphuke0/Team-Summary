@@ -6,33 +6,35 @@ const multer = require('multer');
 const axios = require('axios');
 const FormData = require('form-data');
 const OpenAI = require('openai');
-const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Database connection setup
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-});
+// Supabase connection setup
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-// Test database connection
-pool.connect()
-    .then(client => {
-        console.log('✅ Database connected successfully');
-        client.release();
-    })
-    .catch(err => {
-        console.error('❌ Database connection failed:', err.message);
-    });
+if (!supabaseUrl || !supabaseKey) {
+    console.error('ERROR: Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_ANON_KEY in environment variables.');
+    process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Test Supabase connection
+async function testSupabaseConnection() {
+    try {
+        const { data, error } = await supabase.from('teams').select('count').limit(1);
+        if (error) throw error;
+        console.log('SUCCESS: Supabase connected successfully');
+    } catch (err) {
+        console.error('ERROR: Supabase connection failed:', err.message);
+    }
+}
+
+testSupabaseConnection();
 
 // Initialize OpenAI
 const openai = new OpenAI({
@@ -133,7 +135,7 @@ async function processImageWithOCR(imageBuffer) {
 
         if (response.data && response.data.ParsedResults && response.data.ParsedResults.length > 0) {
             const extractedText = response.data.ParsedResults[0].ParsedText;
-            console.log('✅ OCR processing successful');
+            console.log('SUCCESS: OCR processing successful');
             console.log('Extracted text from your image:', extractedText);
             return extractedText;
         } else {
@@ -167,7 +169,7 @@ async function processImageWithOCR(imageBuffer) {
 function parseTeamDataFromOCRText(ocrText) {
     const lines = ocrText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
-    console.log('📝 Parsing OCR text for team data. Total lines:', lines.length);
+    console.log('INFO: Parsing OCR text for team data. Total lines:', lines.length);
     console.log('Raw OCR lines:', lines);
 
     const players = [];
@@ -249,7 +251,7 @@ function parseTeamDataFromOCRText(ocrText) {
         );
         
         if (skipLine) {
-            console.log(`❌ Filtered out: "${line}" (non-player text)`);
+            console.log(`FILTER: Filtered out: "${line}" (non-player text)`);
             continue;
         }
 
@@ -287,16 +289,16 @@ function parseTeamDataFromOCRText(ocrText) {
             
             // Final validation after cleaning
             if (cleanName.length >= 2 && cleanName.length <= 20 && /^[A-Za-z\s\.\-']+$/.test(cleanName)) {
-                console.log(`✅ Player found: "${cleanName}" (${currentRole || 'Unknown'})`);
+                console.log(`SUCCESS: Player found: "${cleanName}" (${currentRole || 'Unknown'})`);
                 players.push({
                     name: cleanName,
                     role: currentRole || 'Unknown'
                 });
             } else {
-                console.log(`❌ Rejected after cleaning: "${line}" -> "${cleanName}" (failed final validation)`);
+                console.log(`REJECT: Rejected after cleaning: "${line}" -> "${cleanName}" (failed final validation)`);
             }
         } else {
-            console.log(`❌ Invalid name format: "${line}"`);
+            console.log(`REJECT: Invalid name format: "${line}"`);
         }
     }
 
@@ -305,7 +307,7 @@ function parseTeamDataFromOCRText(ocrText) {
         index === self.findIndex(p => p.name === player.name)
     );
 
-    console.log(`🎯 Final Results: Extracted ${uniquePlayers.length} unique players:`);
+    console.log(`RESULTS: Extracted ${uniquePlayers.length} unique players:`);
     uniquePlayers.forEach((player, index) => {
         console.log(`  ${index + 1}. ${player.name} (${player.role})`);
     });
@@ -333,12 +335,153 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Get IPL teams
+// Get IPL teams (hardcoded)
 app.get('/api/teams', (req, res) => {
     res.json({
         success: true,
         teams: iplTeams
     });
+});
+
+// Test Supabase - Get teams from database
+app.get('/api/teams/supabase', async (req, res) => {
+    try {
+        console.log('INFO: Testing Supabase connection...');
+        
+        const { data: teams, error } = await supabase
+            .from('teams')
+            .select('team_id, team_name, short_name')
+            .order('team_name', { ascending: true });
+            
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
+        
+        console.log('SUCCESS: Supabase query successful! Found', teams.length, 'teams');
+        
+        res.json({
+            success: true,
+            message: 'Supabase is working!',
+            teams: teams,
+            count: teams.length,
+            supabaseWorking: true
+        });
+    } catch (error) {
+        console.error('ERROR: Supabase test failed:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Supabase connection failed',
+            error: error.message,
+            supabaseWorking: false
+        });
+    }
+});
+
+// Head-to-Head matches between teams using Supabase
+app.post('/api/matches/head-to-head', async (req, res) => {
+    try {
+        const { teamA, teamB, beforeDate, limit = 5 } = req.body;
+
+        if (!teamA || !teamB || !beforeDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'teamA, teamB, and beforeDate are required'
+            });
+        }
+
+        console.log(`INFO: Finding last ${limit} matches between ${teamA} and ${teamB} before ${beforeDate}`);
+
+        // First, get team IDs for the specified teams
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('team_id, team_name')
+            .in('team_name', [teamA, teamB]);
+
+        if (teamsError) {
+            console.error('Teams query error:', teamsError);
+            throw teamsError;
+        }
+
+        if (teams.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: `One or both teams not found in database. Available teams: ${teams.map(t => t.team_name).join(', ')}`
+            });
+        }
+
+        const teamAData = teams.find(t => t.team_name === teamA);
+        const teamBData = teams.find(t => t.team_name === teamB);
+
+        console.log(`Team A: ${teamAData.team_name} (ID: ${teamAData.team_id})`);
+        console.log(`Team B: ${teamBData.team_name} (ID: ${teamBData.team_id})`);
+
+        // Query for head-to-head matches using Supabase
+        const { data: matches, error: matchesError } = await supabase
+            .from('matches')
+            .select(`
+                match_id,
+                match_date,
+                team1_id,
+                team2_id,
+                winner_team_id,
+                teams!team1_id(team_name),
+                teams_team2:teams!team2_id(team_name),
+                teams_winner:teams!winner_team_id(team_name),
+                venues(venue_name, city)
+            `)
+            .or(`and(team1_id.eq.${teamAData.team_id},team2_id.eq.${teamBData.team_id}),and(team1_id.eq.${teamBData.team_id},team2_id.eq.${teamAData.team_id})`)
+            .lt('match_date', beforeDate)
+            .order('match_date', { ascending: false })
+            .limit(limit);
+
+        if (matchesError) {
+            console.error('Matches query error:', matchesError);
+            throw matchesError;
+        }
+
+        console.log(`SUCCESS: Found ${matches.length} head-to-head matches`);
+
+        // Process matches to calculate wins
+        const teamAWins = matches.filter(match => match.winner_team_id === teamAData.team_id).length;
+        const teamBWins = matches.filter(match => match.winner_team_id === teamBData.team_id).length;
+        const draws = matches.filter(match => !match.winner_team_id).length;
+
+        // Format the response
+        const formattedMatches = matches.map(match => ({
+            match_id: match.match_id,
+            match_date: match.match_date,
+            team1: match.teams?.team_name || teamA,
+            team2: match.teams_team2?.team_name || teamB,
+            winner: match.teams_winner?.team_name || null,
+            venue: match.venues?.venue_name || 'Unknown',
+            city: match.venues?.city || 'Unknown'
+        }));
+
+        res.json({
+            success: true,
+            query: `Last ${limit} matches between ${teamA} and ${teamB} before ${beforeDate}`,
+            data: {
+                teamA: teamA,
+                teamB: teamB,
+                beforeDate: beforeDate,
+                totalMatches: matches.length,
+                teamAWins: teamAWins,
+                teamBWins: teamBWins,
+                draws: draws,
+                matches: formattedMatches
+            },
+            supabaseQuery: true
+        });
+
+    } catch (error) {
+        console.error('ERROR: Head-to-head query failed:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch head-to-head matches',
+            error: error.message
+        });
+    }
 });
 
 // OCR Processing endpoint
@@ -467,7 +610,7 @@ app.post('/api/manual-team', async (req, res) => {
 // DATABASE ANALYSIS ENDPOINTS
 // ==============================================
 
-// 1. Team Recent Form - Last 5 matches win/loss
+// 1. Team Recent Form - Last 5 matches win/loss (Supabase)
 app.post('/api/team-recent-form', async (req, res) => {
     try {
         const { teamA, teamB, matchDate } = req.body;
@@ -479,28 +622,78 @@ app.post('/api/team-recent-form', async (req, res) => {
             });
         }
 
-        const query = `
-            SELECT 
-                m.match_id,
-                m.match_date,
-                t.team_name,
-                CASE 
-                    WHEN m.winner_team_id IS NULL THEN 'Draw'
-                    WHEN m.winner_team_id = t.team_id THEN 'Win'
-                    ELSE 'Loss'
-                END AS result
-            FROM matches m
-            JOIN teams t ON m.team1_id = t.team_id OR m.team2_id = t.team_id
-            WHERE t.team_name IN ($1, $2)
-              AND m.match_date < $3
-            ORDER BY t.team_name, m.match_date DESC
-        `;
+        console.log(`INFO: Finding recent form for ${teamA} and ${teamB} before ${matchDate}`);
 
-        const result = await pool.query(query, [teamA, teamB, matchDate]);
+        // Get team IDs for the specified teams
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('team_id, team_name')
+            .in('team_name', [teamA, teamB]);
 
-        // Group results by team and limit to 5 matches each
-        const teamAMatches = result.rows.filter(row => row.team_name === teamA).slice(0, 5);
-        const teamBMatches = result.rows.filter(row => row.team_name === teamB).slice(0, 5);
+        if (teamsError) throw teamsError;
+
+        if (teams.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'One or both teams not found in database'
+            });
+        }
+
+        const teamIds = teams.map(t => t.team_id);
+
+        // Get recent matches for both teams
+        const { data: matches, error: matchesError } = await supabase
+            .from('matches')
+            .select(`
+                match_id,
+                match_date,
+                team1_id,
+                team2_id,
+                winner_team_id,
+                teams!team1_id(team_name),
+                teams_team2:teams!team2_id(team_name)
+            `)
+            .or(`team1_id.in.(${teamIds.join(',')}),team2_id.in.(${teamIds.join(',')})`)
+            .lt('match_date', matchDate)
+            .order('match_date', { ascending: false })
+            .limit(20); // Get more to ensure we have enough for both teams
+
+        if (matchesError) throw matchesError;
+
+        // Process matches for each team
+        const teamAMatches = [];
+        const teamBMatches = [];
+
+        matches.forEach(match => {
+            const isTeamAMatch = teams.find(t => t.team_name === teamA && 
+                (t.team_id === match.team1_id || t.team_id === match.team2_id));
+            const isTeamBMatch = teams.find(t => t.team_name === teamB && 
+                (t.team_id === match.team1_id || t.team_id === match.team2_id));
+
+            if (isTeamAMatch && teamAMatches.length < 5) {
+                const result = !match.winner_team_id ? 'Draw' : 
+                    (match.winner_team_id === isTeamAMatch.team_id ? 'Win' : 'Loss');
+                teamAMatches.push({
+                    match_id: match.match_id,
+                    match_date: match.match_date,
+                    team_name: teamA,
+                    result: result
+                });
+            }
+
+            if (isTeamBMatch && teamBMatches.length < 5) {
+                const result = !match.winner_team_id ? 'Draw' : 
+                    (match.winner_team_id === isTeamBMatch.team_id ? 'Win' : 'Loss');
+                teamBMatches.push({
+                    match_id: match.match_id,
+                    match_date: match.match_date,
+                    team_name: teamB,
+                    result: result
+                });
+            }
+        });
+
+        console.log(`SUCCESS: Found ${teamAMatches.length} matches for ${teamA}, ${teamBMatches.length} matches for ${teamB}`);
 
         res.json({
             success: true,
@@ -513,7 +706,8 @@ app.post('/api/team-recent-form', async (req, res) => {
                     name: teamB,
                     matches: teamBMatches
                 }
-            }
+            },
+            supabaseQuery: true
         });
 
     } catch (error) {
@@ -525,7 +719,7 @@ app.post('/api/team-recent-form', async (req, res) => {
     }
 });
 
-// 2. Head-to-Head between teams
+// 2. Head-to-Head between teams (Supabase) - Legacy endpoint 
 app.post('/api/head-to-head', async (req, res) => {
     try {
         const { teamA, teamB, matchDate } = req.body;
@@ -537,46 +731,78 @@ app.post('/api/head-to-head', async (req, res) => {
             });
         }
 
-        const query = `
-            SELECT 
-                m.match_id,
-                m.match_date,
-                t1.team_name as team1,
-                t2.team_name as team2,
-                tw.team_name as winner
-            FROM matches m
-            JOIN teams t1 ON m.team1_id = t1.team_id
-            JOIN teams t2 ON m.team2_id = t2.team_id
-            LEFT JOIN teams tw ON m.winner_team_id = tw.team_id
-            WHERE ((t1.team_name = $1 AND t2.team_name = $2) OR 
-                   (t1.team_name = $2 AND t2.team_name = $1))
-              AND m.match_date < $3
-              AND m.match_date >= $4
-            ORDER BY m.match_date DESC
-        `;
+        console.log(`INFO: Head-to-head between ${teamA} and ${teamB} before ${matchDate}`);
+
+        // Get team IDs
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('team_id, team_name')
+            .in('team_name', [teamA, teamB]);
+
+        if (teamsError) throw teamsError;
+
+        if (teams.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'One or both teams not found in database'
+            });
+        }
+
+        const teamAId = teams.find(t => t.team_name === teamA)?.team_id;
+        const teamBId = teams.find(t => t.team_name === teamB)?.team_id;
 
         // Last 5 years from match date
         const fiveYearsAgo = new Date(matchDate);
         fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
 
-        const result = await pool.query(query, [teamA, teamB, matchDate, fiveYearsAgo.toISOString().split('T')[0]]);
+        // Get head-to-head matches using Supabase
+        const { data: matches, error: matchesError } = await supabase
+            .from('matches')
+            .select(`
+                match_id,
+                match_date,
+                team1_id,
+                team2_id,
+                winner_team_id,
+                teams_team1:teams!team1_id(team_name),
+                teams_team2:teams!team2_id(team_name),
+                teams_winner:teams!winner_team_id(team_name)
+            `)
+            .or(`and(team1_id.eq.${teamAId},team2_id.eq.${teamBId}),and(team1_id.eq.${teamBId},team2_id.eq.${teamAId})`)
+            .lt('match_date', matchDate)
+            .gte('match_date', fiveYearsAgo.toISOString().split('T')[0])
+            .order('match_date', { ascending: false });
+
+        if (matchesError) throw matchesError;
 
         // Calculate wins for each team
-        const teamAWins = result.rows.filter(row => row.winner === teamA).length;
-        const teamBWins = result.rows.filter(row => row.winner === teamB).length;
-        const draws = result.rows.filter(row => !row.winner).length;
+        const teamAWins = matches.filter(match => match.winner_team_id === teamAId).length;
+        const teamBWins = matches.filter(match => match.winner_team_id === teamBId).length;
+        const draws = matches.filter(match => !match.winner_team_id).length;
+
+        // Format recent matches
+        const recentMatches = matches.slice(0, 10).map(match => ({
+            match_id: match.match_id,
+            match_date: match.match_date,
+            team1: match.teams_team1?.team_name || teamA,
+            team2: match.teams_team2?.team_name || teamB,
+            winner: match.teams_winner?.team_name || null
+        }));
+
+        console.log(`SUCCESS: Found ${matches.length} head-to-head matches in last 5 years`);
 
         res.json({
             success: true,
             data: {
                 teamA: teamA,
                 teamB: teamB,
-                totalMatches: result.rows.length,
+                totalMatches: matches.length,
                 teamAWins: teamAWins,
                 teamBWins: teamBWins,
                 draws: draws,
-                recentMatches: result.rows.slice(0, 10) // Last 10 matches
-            }
+                recentMatches: recentMatches
+            },
+            supabaseQuery: true
         });
 
     } catch (error) {
@@ -588,7 +814,7 @@ app.post('/api/head-to-head', async (req, res) => {
     }
 });
 
-// 3. Player Performance - Captain and Vice-Captain
+// 3. Player Performance - Captain and Vice-Captain (Supabase)
 app.post('/api/player-performance', async (req, res) => {
     try {
         const { captain, viceCaptain, matchDate } = req.body;
@@ -600,29 +826,108 @@ app.post('/api/player-performance', async (req, res) => {
             });
         }
 
-        const query = `
-            SELECT 
-                pms.match_id,
-                m.match_date,
-                p.player_name,
-                pms.runs_scored,
-                pms.wickets_taken,
-                pms.balls_faced,
-                pms.strike_rate,
-                pms.economy_rate
-            FROM player_match_stats pms
-            JOIN players p ON pms.player_id = p.player_id
-            JOIN matches m ON pms.match_id = m.match_id
-            WHERE p.player_name IN ($1, $2)
-              AND m.match_date < $3
-            ORDER BY p.player_name, m.match_date DESC
-        `;
+        console.log(`INFO: Getting player performance for ${captain} and ${viceCaptain} before ${matchDate}`);
 
-        const result = await pool.query(query, [captain, viceCaptain, matchDate]);
+        // Step 1: Get player IDs first
+        const { data: players, error: playersError } = await supabase
+            .from('players')
+            .select('player_id, player_name')
+            .in('player_name', [captain, viceCaptain]);
 
-        // Group by player and limit to 5 matches each
-        const captainStats = result.rows.filter(row => row.player_name === captain).slice(0, 5);
-        const viceCaptainStats = result.rows.filter(row => row.player_name === viceCaptain).slice(0, 5);
+        if (playersError) {
+            console.error('Players query error:', playersError);
+            throw playersError;
+        }
+
+        if (!players || players.length === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    captain: { name: captain, recentMatches: [] },
+                    viceCaptain: { name: viceCaptain, recentMatches: [] }
+                },
+                message: 'No players found in database'
+            });
+        }
+
+        const captainId = players.find(p => p.player_name === captain)?.player_id;
+        const viceCaptainId = players.find(p => p.player_name === viceCaptain)?.player_id;
+
+        // Step 2: Get matches before the specified date for ordering
+        const { data: recentMatches, error: matchesError } = await supabase
+            .from('matches')
+            .select('match_id, match_date')
+            .lt('match_date', matchDate)
+            .order('match_date', { ascending: false })
+            .limit(50); // Get enough recent matches to find player stats
+
+        if (matchesError) {
+            console.error('Matches query error:', matchesError);
+            throw matchesError;
+        }
+
+        if (!recentMatches || recentMatches.length === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    captain: { name: captain, recentMatches: [] },
+                    viceCaptain: { name: viceCaptain, recentMatches: [] }
+                },
+                message: 'No recent matches found'
+            });
+        }
+
+        const matchIds = recentMatches.map(m => m.match_id);
+
+        // Step 3: Get player stats for these matches
+        const { data: playerStats, error: statsError } = await supabase
+            .from('player_match_stats')
+            .select(`
+                match_id,
+                player_id,
+                runs_scored,
+                wickets_taken,
+                balls_faced,
+                strike_rate,
+                economy_rate
+            `)
+            .in('match_id', matchIds)
+            .in('player_id', [captainId, viceCaptainId].filter(Boolean));
+
+        if (statsError) {
+            console.error('Player stats query error:', statsError);
+            throw statsError;
+        }
+
+        // Step 4: Process and sort the results
+        const processPlayerStats = (playerId, playerName) => {
+            if (!playerId) return [];
+            
+            const stats = playerStats
+                .filter(stat => stat.player_id === playerId)
+                .map(stat => {
+                    const match = recentMatches.find(m => m.match_id === stat.match_id);
+                    return {
+                        match_id: stat.match_id,
+                        match_date: match?.match_date,
+                        player_name: playerName,
+                        runs_scored: stat.runs_scored || 0,
+                        wickets_taken: stat.wickets_taken || 0,
+                        balls_faced: stat.balls_faced || 0,
+                        strike_rate: stat.strike_rate || 0,
+                        economy_rate: stat.economy_rate || 0
+                    };
+                })
+                .sort((a, b) => new Date(b.match_date) - new Date(a.match_date))
+                .slice(0, 5);
+            
+            return stats;
+        };
+
+        const captainStats = processPlayerStats(captainId, captain);
+        const viceCaptainStats = processPlayerStats(viceCaptainId, viceCaptain);
+
+        console.log(`✅ Found ${captainStats.length} matches for ${captain}, ${viceCaptainStats.length} matches for ${viceCaptain}`);
 
         res.json({
             success: true,
@@ -635,7 +940,8 @@ app.post('/api/player-performance', async (req, res) => {
                     name: viceCaptain,
                     recentMatches: viceCaptainStats
                 }
-            }
+            },
+            supabaseQuery: true
         });
 
     } catch (error) {
@@ -647,7 +953,7 @@ app.post('/api/player-performance', async (req, res) => {
     }
 });
 
-// 4. Venue Statistics using CTE approach
+// 4. Venue Statistics (Supabase) - Multi-step approach replacing CTEs
 app.post('/api/venue-stats', async (req, res) => {
     try {
         const { teamA, teamB, matchDate } = req.body;
@@ -659,67 +965,142 @@ app.post('/api/venue-stats', async (req, res) => {
             });
         }
 
-        const query = `
-            WITH selected_match AS (
-                SELECT m.match_id, m.venue_id
-                FROM matches m
-                JOIN teams t1 ON m.team1_id = t1.team_id
-                JOIN teams t2 ON m.team2_id = t2.team_id
-                WHERE m.match_date = $3
-                  AND t1.team_name = $1
-                  AND t2.team_name = $2
-                LIMIT 1
-            ),
-            venue_data AS (
-                SELECT 
-                    m.venue_id,
-                    COUNT(DISTINCT m.match_id) AS total_matches,
-                    ROUND(AVG(CASE WHEN s.innings = 1 THEN s.team_score END), 2) AS avg_first_innings_score,
-                    ROUND(AVG(CASE WHEN s.innings = 2 THEN s.team_score END), 2) AS avg_second_innings_score,
-                    SUM(s.team_wickets) AS total_wickets
-                FROM matches m
-                JOIN (
-                    SELECT 
-                        match_id,
-                        team_id,
-                        SUM(runs_scored) AS team_score,
-                        SUM(wickets_taken) AS team_wickets,
-                        ROW_NUMBER() OVER(PARTITION BY match_id ORDER BY team_id) AS innings
-                    FROM player_match_stats
-                    GROUP BY match_id, team_id
-                ) s ON m.match_id = s.match_id
-                WHERE m.venue_id = (SELECT venue_id FROM selected_match LIMIT 1)
-                  AND m.match_date < $3
-                GROUP BY m.venue_id
-            )
-            SELECT 
-                v.venue_name,
-                v.city as location,
-                vd.total_matches,
-                vd.avg_first_innings_score,
-                vd.avg_second_innings_score,
-                vd.total_wickets
-            FROM venue_data vd
-            JOIN venues v ON vd.venue_id = v.venue_id
-        `;
+        console.log(`🔍 Getting venue statistics for ${teamA} vs ${teamB} on ${matchDate}`);
 
-        const result = await pool.query(query, [teamA, teamB, matchDate]);
+        // Step 1: Find the match venue for the specified teams and date
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('team_id, team_name')
+            .in('team_name', [teamA, teamB]);
 
-        if (result.rows.length === 0) {
+        if (teamsError) throw teamsError;
+
+        if (teams.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'One or both teams not found in database'
+            });
+        }
+
+        const teamAId = teams.find(t => t.team_name === teamA)?.team_id;
+        const teamBId = teams.find(t => t.team_name === teamB)?.team_id;
+
+        // Find the match venue
+        const { data: selectedMatch, error: matchError } = await supabase
+            .from('matches')
+            .select('venue_id, venues(venue_name, city)')
+            .eq('match_date', matchDate)
+            .or(`and(team1_id.eq.${teamAId},team2_id.eq.${teamBId}),and(team1_id.eq.${teamBId},team2_id.eq.${teamAId})`)
+            .limit(1);
+
+        if (matchError) throw matchError;
+
+        if (!selectedMatch || selectedMatch.length === 0) {
             return res.json({
                 success: true,
                 data: {
-                    message: 'No venue data found for this match combination',
+                    message: 'No match found for the specified date and teams',
                     venueStats: null
                 }
             });
         }
 
+        const venueId = selectedMatch[0].venue_id;
+        const venueInfo = selectedMatch[0].venues;
+
+        // Step 2: Get historical matches at this venue
+        const { data: historicalMatches, error: historicalError } = await supabase
+            .from('matches')
+            .select('match_id')
+            .eq('venue_id', venueId)
+            .lt('match_date', matchDate);
+
+        if (historicalError) throw historicalError;
+
+        if (!historicalMatches || historicalMatches.length === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    message: 'No historical data found for this venue',
+                    venueStats: {
+                        venue_name: venueInfo?.venue_name,
+                        location: venueInfo?.city,
+                        total_matches: 0,
+                        avg_first_innings_score: 0,
+                        avg_second_innings_score: 0,
+                        total_wickets: 0
+                    }
+                }
+            });
+        }
+
+        const matchIds = historicalMatches.map(m => m.match_id);
+
+        // Step 3: Get team scores for these matches (simplified approach)
+        const { data: teamScores, error: scoresError } = await supabase
+            .from('player_match_stats')
+            .select('match_id, team_id, runs_scored, wickets_taken')
+            .in('match_id', matchIds);
+
+        if (scoresError) throw scoresError;
+
+        // Step 4: Calculate venue statistics
+        const matchScores = {};
+        teamScores.forEach(stat => {
+            if (!matchScores[stat.match_id]) {
+                matchScores[stat.match_id] = [];
+            }
+            matchScores[stat.match_id].push({
+                team_id: stat.team_id,
+                runs: stat.runs_scored || 0,
+                wickets: stat.wickets_taken || 0
+            });
+        });
+
+        // Calculate innings scores
+        const firstInningsScores = [];
+        const secondInningsScores = [];
+        let totalWickets = 0;
+
+        Object.values(matchScores).forEach(matchData => {
+            // Group by team and sum runs
+            const teamTotals = {};
+            matchData.forEach(stat => {
+                if (!teamTotals[stat.team_id]) {
+                    teamTotals[stat.team_id] = { runs: 0, wickets: 0 };
+                }
+                teamTotals[stat.team_id].runs += stat.runs;
+                teamTotals[stat.team_id].wickets += stat.wickets;
+            });
+
+            const teamScoreArray = Object.values(teamTotals);
+            if (teamScoreArray.length >= 2) {
+                firstInningsScores.push(teamScoreArray[0].runs);
+                secondInningsScores.push(teamScoreArray[1].runs);
+                totalWickets += teamScoreArray[0].wickets + teamScoreArray[1].wickets;
+            }
+        });
+
+        const avgFirstInnings = firstInningsScores.length > 0 ? 
+            Math.round((firstInningsScores.reduce((a, b) => a + b, 0) / firstInningsScores.length) * 100) / 100 : 0;
+        const avgSecondInnings = secondInningsScores.length > 0 ? 
+            Math.round((secondInningsScores.reduce((a, b) => a + b, 0) / secondInningsScores.length) * 100) / 100 : 0;
+
+        console.log(`✅ Found venue stats for ${venueInfo?.venue_name}: ${historicalMatches.length} matches`);
+
         res.json({
             success: true,
             data: {
-                venueStats: result.rows[0]
-            }
+                venueStats: {
+                    venue_name: venueInfo?.venue_name,
+                    location: venueInfo?.city,
+                    total_matches: historicalMatches.length,
+                    avg_first_innings_score: avgFirstInnings,
+                    avg_second_innings_score: avgSecondInnings,
+                    total_wickets: totalWickets
+                }
+            },
+            supabaseQuery: true
         });
 
     } catch (error) {
@@ -1139,10 +1520,10 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Dream11 Analyzer Backend running on port ${PORT}`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔑 OCR API: ${process.env.OCR_API_KEY ? 'Configured' : 'Missing'}`);
-    console.log(`🤖 OpenAI API: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing'}`);
+    console.log(`Dream11 Analyzer Backend running on port ${PORT}`);
+    console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(` OCR API: ${process.env.OCR_API_KEY ? 'Configured' : 'Missing'}`);
+    console.log(` OpenAI API: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing'}`);
 });
 
 // Graceful shutdown
