@@ -91,8 +91,10 @@ const upload = multer({
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
+        } else if (file.mimetype.startsWith('text/csv')) {
+            cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed!'), false);
+            cb(new Error('Only image or CSV files are allowed!'), false);
         }
     }
 });
@@ -324,6 +326,231 @@ function parseTeamDataFromOCRText(ocrText) {
     };
 }
 
+// ==============================================
+// HELPER FUNCTIONS FOR BULK TEAM PROCESSING
+// ==============================================
+
+// Parse CSV teams data
+function parseCSVTeams(csvContent) {
+    const lines = csvContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    if (lines.length < 2) {
+        throw new Error('CSV must have at least a header row and one data row');
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const requiredHeaders = ['teamname', 'players', 'captain', 'vicecaptain'];
+    
+    // Validate headers
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+    if (missingHeaders.length > 0) {
+        throw new Error(`Missing required headers: ${missingHeaders.join(', ')}`);
+    }
+
+    const teams = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        const values = line.split(',').map(v => v.trim());
+        
+        if (values.length < headers.length) {
+            console.warn(`Skipping line ${i + 1}: insufficient columns`);
+            continue;
+        }
+
+        const teamData = {};
+        headers.forEach((header, index) => {
+            teamData[header] = values[index] || '';
+        });
+
+        // Parse players (comma-separated or semicolon-separated)
+        const playersStr = teamData.players;
+        const players = playersStr.includes(';') ? 
+            playersStr.split(';').map(p => p.trim()).filter(p => p.length > 0) :
+            playersStr.split(',').map(p => p.trim()).filter(p => p.length > 0);
+
+        if (players.length === 0) {
+            console.warn(`Skipping line ${i + 1}: no valid players found`);
+            continue;
+        }
+
+        // Validate team data
+        if (players.length > 11) {
+            console.warn(`Line ${i + 1}: Team has ${players.length} players, limiting to 11`);
+            players.splice(11);
+        }
+
+        teams.push({
+            teamId: i,
+            teamName: teamData.teamname || `Team ${i}`,
+            players: players,
+            captain: teamData.captain || '',
+            vice_captain: teamData.vicecaptain || '',
+            playerDetails: players.map(name => ({
+                name: name,
+                role: 'Unknown'
+            }))
+        });
+    }
+
+    return teams;
+}
+
+// Generate teams summary
+function generateTeamsSummary(teams) {
+    const totalTeams = teams.length;
+    const totalPlayers = teams.reduce((sum, team) => sum + team.players.length, 0);
+    const avgPlayersPerTeam = totalPlayers / totalTeams;
+    
+    // Count unique players across all teams
+    const allPlayers = new Set();
+    teams.forEach(team => {
+        team.players.forEach(player => allPlayers.add(player));
+    });
+    
+    const uniquePlayers = allPlayers.size;
+    
+    // Find most common players
+    const playerCounts = {};
+    teams.forEach(team => {
+        team.players.forEach(player => {
+            playerCounts[player] = (playerCounts[player] || 0) + 1;
+        });
+    });
+    
+    const mostCommonPlayers = Object.entries(playerCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([player, count]) => ({ player, count }));
+
+    return {
+        totalTeams,
+        totalPlayers,
+        avgPlayersPerTeam: Math.round(avgPlayersPerTeam * 10) / 10,
+        uniquePlayers,
+        mostCommonPlayers
+    };
+}
+
+// Analyze single team (reuse existing analysis logic)
+async function analyzeSingleTeam(team, matchDetails) {
+    // This function will reuse the existing analysis logic
+    // For now, we'll create a simplified analysis
+    const composition = analyzeTeamComposition(team.players);
+    
+    const analysis = {
+        teamComposition: composition,
+        playerCount: team.players.length,
+        captain: team.captain,
+        vice_captain: team.vice_captain,
+        summary: `Team with ${team.players.length} players. ${composition.summary}`
+    };
+
+    // If OpenAI is available, get AI analysis
+    if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here') {
+        try {
+            const prompt = `Analyze this Dream11 team for IPL match ${matchDetails.teamA} vs ${matchDetails.teamB} on ${formatDateForPrompt(matchDetails.matchDate)}:
+
+Players: ${team.players.join(', ')}
+Captain: ${team.captain}
+Vice-Captain: ${team.vice_captain}
+Team Composition: ${composition.summary}
+
+Provide a brief analysis (max 3 sentences) focusing on team balance and strategy.`;
+
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an expert fantasy cricket analyst. Provide concise, actionable insights."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                max_tokens: 150,
+                temperature: 0.6,
+            });
+
+            analysis.aiAnalysis = completion.choices[0].message.content;
+        } catch (error) {
+            console.error('AI analysis failed for team:', error);
+            analysis.aiAnalysis = 'AI analysis not available';
+        }
+    }
+
+    return analysis;
+}
+
+// Generate comparative analysis across all teams
+function generateComparativeAnalysis(analysisResults, matchDetails) {
+    if (analysisResults.length === 0) {
+        return { message: 'No teams to compare' };
+    }
+
+    const totalTeams = analysisResults.length;
+    
+    // Analyze team compositions
+    const compositions = analysisResults.map(result => result.analysis.teamComposition);
+    const avgBatsmen = compositions.reduce((sum, comp) => sum + comp.batsmen, 0) / totalTeams;
+    const avgBowlers = compositions.reduce((sum, comp) => sum + comp.bowlers, 0) / totalTeams;
+    const avgAllRounders = compositions.reduce((sum, comp) => sum + comp.allRounders, 0) / totalTeams;
+    const avgWicketKeepers = compositions.reduce((sum, comp) => sum + comp.wicketKeepers, 0) / totalTeams;
+
+    // Find most popular players
+    const playerCounts = {};
+    analysisResults.forEach(result => {
+        result.players.forEach(player => {
+            playerCounts[player] = (playerCounts[player] || 0) + 1;
+        });
+    });
+
+    const mostPopularPlayers = Object.entries(playerCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10)
+        .map(([player, count]) => ({ player, count, percentage: Math.round((count / totalTeams) * 100) }));
+
+    // Find most popular captains and vice-captains
+    const captainCounts = {};
+    const viceCaptainCounts = {};
+    
+    analysisResults.forEach(result => {
+        if (result.captain) {
+            captainCounts[result.captain] = (captainCounts[result.captain] || 0) + 1;
+        }
+        if (result.vice_captain) {
+            viceCaptainCounts[result.vice_captain] = (viceCaptainCounts[result.vice_captain] || 0) + 1;
+        }
+    });
+
+    const mostPopularCaptains = Object.entries(captainCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([player, count]) => ({ player, count, percentage: Math.round((count / totalTeams) * 100) }));
+
+    const mostPopularViceCaptains = Object.entries(viceCaptainCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([player, count]) => ({ player, count, percentage: Math.round((count / totalTeams) * 100) }));
+
+    return {
+        matchDetails,
+        totalTeams,
+        averageComposition: {
+            batsmen: Math.round(avgBatsmen * 10) / 10,
+            bowlers: Math.round(avgBowlers * 10) / 10,
+            allRounders: Math.round(avgAllRounders * 10) / 10,
+            wicketKeepers: Math.round(avgWicketKeepers * 10) / 10
+        },
+        mostPopularPlayers,
+        mostPopularCaptains,
+        mostPopularViceCaptains,
+        summary: `Analysis of ${totalTeams} teams for ${matchDetails.teamA} vs ${matchDetails.teamB}`
+    };
+}
+
 // API Routes
 
 // Health check
@@ -549,6 +776,363 @@ app.post('/api/ocr/process', strictLimiter, upload.single('image'), async (req, 
             suggestion: suggestion,
             requiresAPIKey: isAPIKeyError
         });
+    }
+});
+
+// CSV Bulk Team Processing endpoint
+app.post('/api/csv/process-teams', strictLimiter, upload.single('csv'), async (req, res) => {
+    try {
+        console.log('Received CSV bulk team processing request');
+        
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No CSV file provided'
+            });
+        }
+
+        console.log(`Processing CSV: ${req.file.size} bytes, type: ${req.file.mimetype}`);
+
+        // Parse CSV content
+        const csvContent = req.file.buffer.toString('utf-8');
+        const teams = parseCSVTeams(csvContent);
+
+        if (teams.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No valid team data found in CSV'
+            });
+        }
+
+        console.log(`Successfully processed ${teams.length} teams from CSV`);
+
+        res.json({
+            success: true,
+            data: {
+                teams: teams,
+                totalTeams: teams.length,
+                summary: generateTeamsSummary(teams)
+            },
+            message: `Successfully processed ${teams.length} teams from CSV`
+        });
+
+    } catch (error) {
+        console.error('CSV processing error:', error);
+        
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to process CSV file',
+            suggestion: 'Please ensure your CSV follows the required format'
+        });
+    }
+});
+
+// Multiple Screenshots Processing endpoint
+app.post('/api/ocr/process-multiple', strictLimiter, upload.array('images', 10), async (req, res) => {
+    try {
+        console.log('Received multiple screenshots processing request');
+        
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No image files provided'
+            });
+        }
+
+        console.log(`Processing ${req.files.length} screenshots`);
+
+        const teams = [];
+        const errors = [];
+
+        // Process each image
+        for (let i = 0; i < req.files.length; i++) {
+            const file = req.files[i];
+            try {
+                console.log(`Processing image ${i + 1}/${req.files.length}: ${file.originalname}`);
+                
+                const ocrText = await processImageWithOCR(file.buffer);
+                const teamData = parseTeamDataFromOCRText(ocrText);
+                
+                if (teamData.players.length > 0) {
+                    teams.push({
+                        teamId: i + 1,
+                        fileName: file.originalname,
+                        players: teamData.players,
+                        captain: teamData.captain,
+                        vice_captain: teamData.vice_captain,
+                        playerDetails: teamData.playerDetails
+                    });
+                } else {
+                    errors.push({
+                        fileName: file.originalname,
+                        error: 'No player data extracted'
+                    });
+                }
+            } catch (error) {
+                console.error(`Error processing image ${file.originalname}:`, error);
+                errors.push({
+                    fileName: file.originalname,
+                    error: error.message
+                });
+            }
+        }
+
+        if (teams.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No teams could be extracted from any of the uploaded images',
+                errors: errors
+            });
+        }
+
+        console.log(`Successfully processed ${teams.length} teams from ${req.files.length} screenshots`);
+
+        res.json({
+            success: true,
+            data: {
+                teams: teams,
+                totalTeams: teams.length,
+                totalImages: req.files.length,
+                errors: errors,
+                summary: generateTeamsSummary(teams)
+            },
+            message: `Successfully processed ${teams.length} teams from ${req.files.length} screenshots`
+        });
+
+    } catch (error) {
+        console.error('Multiple screenshots processing error:', error);
+        
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to process multiple screenshots'
+        });
+    }
+});
+
+// Bulk Team Analysis endpoint
+app.post('/api/analyze/bulk-teams', async (req, res) => {
+    try {
+        console.log('Received bulk team analysis request');
+        
+        const { teams, matchDetails } = req.body;
+        
+        if (!teams || !Array.isArray(teams) || teams.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Teams array is required'
+            });
+        }
+
+        if (!matchDetails || !matchDetails.teamA || !matchDetails.teamB || !matchDetails.matchDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Match details (teamA, teamB, matchDate) are required'
+            });
+        }
+
+        console.log(`Analyzing ${teams.length} teams for match: ${matchDetails.teamA} vs ${matchDetails.teamB}`);
+
+        const analysisResults = [];
+        const errors = [];
+
+        // Analyze each team
+        for (let i = 0; i < teams.length; i++) {
+            const team = teams[i];
+            try {
+                console.log(`Analyzing team ${i + 1}/${teams.length}: ${team.teamName || `Team ${i + 1}`}`);
+                
+                const analysis = await analyzeSingleTeam(team, matchDetails);
+                analysisResults.push({
+                    teamId: team.teamId || i + 1,
+                    teamName: team.teamName || `Team ${i + 1}`,
+                    analysis: analysis,
+                    players: team.players,
+                    captain: team.captain,
+                    vice_captain: team.vice_captain
+                });
+            } catch (error) {
+                console.error(`Error analyzing team ${i + 1}:`, error);
+                errors.push({
+                    teamId: team.teamId || i + 1,
+                    teamName: team.teamName || `Team ${i + 1}`,
+                    error: error.message
+                });
+            }
+        }
+
+        // Generate comparative analysis
+        const comparativeAnalysis = generateComparativeAnalysis(analysisResults, matchDetails);
+
+        res.json({
+            success: true,
+            data: {
+                individualAnalyses: analysisResults,
+                comparativeAnalysis: comparativeAnalysis,
+                summary: {
+                    totalTeams: teams.length,
+                    successfulAnalyses: analysisResults.length,
+                    failedAnalyses: errors.length,
+                    errors: errors
+                }
+            },
+            message: `Successfully analyzed ${analysisResults.length} out of ${teams.length} teams`
+        });
+
+    } catch (error) {
+        console.error('Bulk team analysis error:', error);
+        
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to analyze teams'
+        });
+    }
+});
+
+// Team Comparison and Recommendation endpoint
+app.post('/api/compare-teams', strictLimiter, async (req, res) => {
+    try {
+        const { teams, matchDetails } = req.body;
+        
+        if (!teams || !Array.isArray(teams) || teams.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least 2 teams are required for comparison'
+            });
+        }
+
+        if (!matchDetails || !matchDetails.teamA || !matchDetails.teamB || !matchDetails.matchDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Match details (teamA, teamB, matchDate) are required'
+            });
+        }
+
+        if (!process.env.OPENAI_API_KEY) {
+            return res.status(500).json({
+                success: false,
+                message: 'OpenAI API key not configured'
+            });
+        }
+
+        console.log(`Comparing ${teams.length} teams for match: ${matchDetails.teamA} vs ${matchDetails.teamB}`);
+
+        // Get match statistics for analysis
+        const [teamFormData, headToHeadData, venueStatsData] = await Promise.all([
+            fetchTeamFormData(matchDetails.teamA, matchDetails.teamB, matchDetails.matchDate),
+            fetchHeadToHeadData(matchDetails.teamA, matchDetails.teamB, matchDetails.matchDate),
+            fetchVenueStatsData(matchDetails.teamA, matchDetails.teamB, matchDetails.matchDate)
+        ]);
+
+        // Prepare team data for comparison
+        const teamComparisons = teams.map((team, index) => {
+            const composition = analyzeTeamComposition(team.players);
+            return {
+                teamId: team.teamId || index + 1,
+                teamName: team.teamName || `Team ${index + 1}`,
+                players: team.players,
+                captain: team.captain,
+                vice_captain: team.vice_captain,
+                composition: composition,
+                playerCount: team.players.length
+            };
+        });
+
+        // Create comprehensive comparison prompt
+        const prompt = `Analyze and compare these ${teams.length} Dream11 fantasy cricket teams for the match ${matchDetails.teamA} vs ${matchDetails.teamB} on ${formatDateForPrompt(matchDetails.matchDate)}.
+
+**MATCH CONTEXT:**
+${teamFormData ? `Recent Form: ${teamFormData}` : 'Recent form data not available'}
+${headToHeadData ? `Head-to-Head: ${headToHeadData}` : 'Head-to-head data not available'}
+${venueStatsData ? `Venue Stats: ${venueStatsData}` : 'Venue statistics not available'}
+
+**TEAMS TO COMPARE:**
+
+${teamComparisons.map((team, index) => `
+**TEAM ${index + 1} (${team.teamName}):**
+• Players: ${team.players.join(', ')}
+• Captain: ${team.captain || 'Not selected'}
+• Vice-Captain: ${team.vice_captain || 'Not selected'}
+• Composition: ${team.composition.batsmen} batsmen, ${team.composition.bowlers} bowlers, ${team.composition.allRounders} all-rounders, ${team.composition.wicketKeepers} wicket-keepers
+`).join('\n')}
+
+**ANALYSIS REQUIREMENTS:**
+
+1. **TEAM BALANCE COMPARISON** - Rate each team's balance (1-10)
+2. **CAPTAINCY STRATEGY** - Evaluate captain/vice-captain choices
+3. **VENUE ADAPTATION** - How well each team fits the venue conditions
+4. **RISK ASSESSMENT** - Identify potential risks for each team
+5. **WINNING PROBABILITY** - Rate each team's winning chances (1-10)
+
+**RECOMMENDATION FORMAT:**
+
+🏆 **WINNING TEAM RECOMMENDATION: TEAM X**
+• **Rating: X/10**
+• **Key Strengths:** [3 main strengths]
+• **Risk Factors:** [2 main risks]
+• **Why This Team:** [1-2 line explanation]
+
+📊 **DETAILED COMPARISON:**
+[Compare all teams side by side with ratings]
+
+🎯 **STRATEGIC INSIGHTS:**
+• [3 actionable insights for the recommended team]
+• [2 alternative strategies if needed]
+
+Keep the analysis concise but comprehensive. Focus on actionable insights that help increase winning probability.`;
+
+        // Call OpenAI API for comparison
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are an expert fantasy cricket analyst specializing in IPL Dream11 team comparisons. Provide data-driven insights with clear recommendations. Focus on team balance, venue strategy, captaincy choices, and risk assessment. Be decisive in your recommendations."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            max_tokens: 1200,
+            temperature: 0.7,
+        });
+
+        const comparisonAnalysis = completion.choices[0].message.content;
+
+        // Format the response
+        const formattedComparison = formatSummaryForMobile(comparisonAnalysis);
+
+        res.json({
+            success: true,
+            comparison: formattedComparison,
+            teamData: teamComparisons,
+            matchContext: {
+                teamForm: teamFormData,
+                headToHead: headToHeadData,
+                venueStats: venueStatsData
+            },
+            message: `Successfully compared ${teams.length} teams`
+        });
+
+    } catch (error) {
+        console.error('Team comparison error:', error);
+
+        if (error.code === 'insufficient_quota') {
+            res.status(429).json({
+                success: false,
+                message: 'OpenAI API quota exceeded. Please try again later.'
+            });
+        } else if (error.code === 'rate_limit_exceeded') {
+            res.status(429).json({
+                success: false,
+                message: 'OpenAI API rate limit exceeded. Please try again in a moment.'
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Failed to compare teams. Please try again.'
+            });
+        }
     }
 });
 
@@ -1489,6 +2073,76 @@ function formatSummaryForMobile(summary) {
     }
     
     return formattedHtml;
+}
+
+// Helper functions for fetching match data for team comparison
+async function fetchTeamFormData(teamA, teamB, matchDate) {
+    try {
+        const response = await fetch(`http://localhost:3001/api/team-recent-form`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ teamA, teamB, matchDate })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                const teamA = data.data.teamA;
+                const teamB = data.data.teamB;
+                const teamAWins = teamA.matches.filter(m => m.result === 'Win').length;
+                const teamBWins = teamB.matches.filter(m => m.result === 'Win').length;
+                return `${teamA.name}: ${teamAWins}/5 wins, ${teamB.name}: ${teamBWins}/5 wins`;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching team form:', error);
+        return null;
+    }
+}
+
+async function fetchHeadToHeadData(teamA, teamB, matchDate) {
+    try {
+        const response = await fetch(`http://localhost:3001/api/matches/head-to-head`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ teamA, teamB, beforeDate: matchDate, limit: 5 })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                const h2h = data.data;
+                return `${h2h.teamA}: ${h2h.teamAWins} wins, ${h2h.teamB}: ${h2h.teamBWins} wins (last ${h2h.totalMatches} matches)`;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching head-to-head data:', error);
+        return null;
+    }
+}
+
+async function fetchVenueStatsData(teamA, teamB, matchDate) {
+    try {
+        const response = await fetch(`http://localhost:3001/api/venue-stats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ teamA, teamB, matchDate })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data.venueStats) {
+                const venue = data.data.venueStats;
+                return `${venue.venue_name}: Avg score ${venue.avg_first_innings_score || 'N/A'}, ${venue.total_matches || 0} matches`;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching venue stats:', error);
+        return null;
+    }
 }
 
 // Error handling middleware

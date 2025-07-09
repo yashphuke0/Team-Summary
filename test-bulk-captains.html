@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Captain Selection Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">🎯 Bulk Captain Selection Test</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Test Data</h2>
+            <button id="test-btn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                Test Bulk Captain Selection
+            </button>
+        </div>
+
+        <div id="results" class="bg-white rounded-lg shadow p-6 hidden">
+            <h2 class="text-lg font-semibold mb-4">Bulk Captain Selection</h2>
+            <div id="content">
+                <div id="bulk-captain-content" class="space-y-6">
+                    <!-- Teams will be populated here -->
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <button id="save-btn" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                        💾 Save All Captain Selections
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test data - 2 teams for bulk captain selection
+        const testTeams = [
+            {
+                teamId: 1,
+                teamName: "Team Alpha",
+                players: ["Virat Kohli", "Rohit Sharma", "MS Dhoni", "Jasprit Bumrah", "Ravindra Jadeja"],
+                captain: "Virat Kohli",
+                vice_captain: "Rohit Sharma"
+            },
+            {
+                teamId: 2,
+                teamName: "Team Beta", 
+                players: ["Rohit Sharma", "Virat Kohli", "MS Dhoni", "Jasprit Bumrah", "Ravindra Jadeja"],
+                captain: "Rohit Sharma",
+                vice_captain: "Virat Kohli"
+            }
+        ];
+
+        document.getElementById('test-btn').addEventListener('click', () => {
+            const results = document.getElementById('results');
+            results.classList.remove('hidden');
+            populateBulkCaptainSelection();
+        });
+
+        document.getElementById('save-btn').addEventListener('click', saveAllCaptainSelections);
+
+        function populateBulkCaptainSelection() {
+            const content = document.getElementById('bulk-captain-content');
+            
+            content.innerHTML = testTeams.map((team, index) => `
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="font-semibold text-gray-900">${team.teamName || `Team ${index + 1}`}</h4>
+                        <span class="text-sm text-gray-500">${team.players.length} players</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Captain</label>
+                            <select class="captain-select w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" data-team-index="${index}">
+                                <option value="">Choose Captain</option>
+                                ${team.players.map(player => `
+                                    <option value="${player}" ${team.captain === player ? 'selected' : ''}>${player}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Vice-Captain</label>
+                            <select class="vice-captain-select w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" data-team-index="${index}">
+                                <option value="">Choose Vice-Captain</option>
+                                ${team.players.map(player => `
+                                    <option value="${player}" ${team.vice_captain === player ? 'selected' : ''}>${player}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Current Captain</div>
+                            <div class="captain-display text-sm font-medium text-yellow-600 bg-yellow-50 p-2 rounded border">
+                                ${team.captain || 'Not selected'}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Current Vice-Captain</div>
+                            <div class="vice-captain-display text-sm font-medium text-blue-600 bg-blue-50 p-2 rounded border">
+                                ${team.vice_captain || 'Not selected'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add event listeners to the new selects
+            document.querySelectorAll('.captain-select').forEach(select => {
+                select.addEventListener('change', handleBulkCaptainChange);
+            });
+            
+            document.querySelectorAll('.vice-captain-select').forEach(select => {
+                select.addEventListener('change', handleBulkViceCaptainChange);
+            });
+        }
+
+        function handleBulkCaptainChange(e) {
+            const teamIndex = parseInt(e.target.dataset.teamIndex);
+            const selectedCaptain = e.target.value;
+            
+            // Update the team data
+            testTeams[teamIndex].captain = selectedCaptain;
+            
+            // Update the display
+            const teamContainer = e.target.closest('.border');
+            const captainDisplay = teamContainer.querySelector('.captain-display');
+            captainDisplay.textContent = selectedCaptain || 'Not selected';
+            captainDisplay.className = `captain-display text-sm font-medium ${selectedCaptain ? 'text-yellow-600 bg-yellow-50' : 'text-gray-600 bg-gray-50'} p-2 rounded border`;
+        }
+
+        function handleBulkViceCaptainChange(e) {
+            const teamIndex = parseInt(e.target.dataset.teamIndex);
+            const selectedViceCaptain = e.target.value;
+            
+            // Update the team data
+            testTeams[teamIndex].vice_captain = selectedViceCaptain;
+            
+            // Update the display
+            const teamContainer = e.target.closest('.border');
+            const viceCaptainDisplay = teamContainer.querySelector('.vice-captain-display');
+            viceCaptainDisplay.textContent = selectedViceCaptain || 'Not selected';
+            viceCaptainDisplay.className = `vice-captain-display text-sm font-medium ${selectedViceCaptain ? 'text-blue-600 bg-blue-50' : 'text-gray-600 bg-gray-50'} p-2 rounded border`;
+        }
+
+        function saveAllCaptainSelections() {
+            console.log('Updated teams data:', testTeams);
+            alert('Captain and vice-captain selections saved for all teams! Check console for updated data.');
+        }
+    </script>
+</body>
+</html> 

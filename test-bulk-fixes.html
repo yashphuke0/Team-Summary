@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bulk Analysis Fixes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Test Bulk Analysis Fixes</h1>
+        
+        <div class="space-y-6">
+            <!-- Test Match Context Section -->
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">📈 Match Context Section</h2>
+                <p class="text-sm text-gray-600 mb-4">This section should appear automatically when teams are selected</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                        <div class="font-medium text-blue-900 mb-2">📈 Team Form</div>
+                        <div class="text-sm text-blue-700">Loading...</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                        <div class="font-medium text-green-900 mb-2">⚔️ Head-to-Head</div>
+                        <div class="text-sm text-green-700">Loading...</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                        <div class="font-medium text-purple-900 mb-2">🏟️ Venue Stats</div>
+                        <div class="text-sm text-purple-700">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Section Order -->
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Section Order Test</h2>
+                <div class="space-y-4 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">1</span>
+                        <span>Teams Summary</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">2</span>
+                        <span>Team Details (All teams and players)</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xs">3</span>
+                        <span>Set Captains & Vice-Captains</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs">4</span>
+                        <span>Team Comparison & Recommendation</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Analysis Fix -->
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Analysis Fix Test</h2>
+                <p class="text-sm text-gray-600 mb-4">The "Analyze All Teams" function should now work without errors</p>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-green-800 text-sm">✅ Fixed: fetchPlayerPerformance function now accepts captain/vice-captain parameters</p>
+                    <p class="text-green-800 text-sm">✅ Fixed: Each team gets individual player performance analysis</p>
+                    <p class="text-green-800 text-sm">✅ Fixed: Proper error handling for missing data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
