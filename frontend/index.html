@@ -3,174 +3,477 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dream11 Team Analyzer</title>
+    <title>cricbuzz11 Team Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1e40af',
-                        secondary: '#059669',
-                        accent: '#dc2626'
+                        // Cricbuzz-inspired color palette
+                        primary: '#0f4c75',      // Deep blue
+                        'primary-light': '#3282b8', // Light blue
+                        secondary: '#00a8cc',    // Cricbuzz cyan
+                        accent: '#ff6b35',       // Orange accent
+                        success: '#2ecc71',     // Green
+                        warning: '#f39c12',     // Amber
+                        danger: '#e74c3c',      // Red
+                        'cricket-green': '#1e8449', // Cricket field green
+                        'cricket-blue': '#2980b9',  // Sky blue
+                        'gray-50': '#f8fafc',
+                        'gray-100': '#f1f5f9',
+                        'gray-200': '#e2e8f0',
+                        'gray-300': '#cbd5e1',
+                        'gray-400': '#94a3b8',
+                        'gray-500': '#64748b',
+                        'gray-600': '#475569',
+                        'gray-700': '#334155',
+                        'gray-800': '#1e293b',
+                        'gray-900': '#0f172a',
+                    },
+                    fontFamily: {
+                        'cricket': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-subtle': 'bounceSubtle 2s infinite',
+                    },
+                    boxShadow: {
+                        'cricket': '0 4px 6px -1px rgba(15, 76, 117, 0.1), 0 2px 4px -1px rgba(15, 76, 117, 0.06)',
+                        'cricket-lg': '0 10px 15px -3px rgba(15, 76, 117, 0.1), 0 4px 6px -2px rgba(15, 76, 117, 0.05)',
                     }
                 }
             }
         }
     </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounceSubtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #0f4c75 0%, #3282b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cricket-pattern {
+            background-image: 
+                radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 2px),
+                radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2px, transparent 2px);
+            background-size: 100px 100px;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(15, 76, 117, 0.1), 0 10px 10px -5px rgba(15, 76, 117, 0.04);
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-md mx-auto px-4 py-4">
-            <h1 class="text-xl font-bold text-gray-900 text-center">
-                🏏 Dream11 Team Analyzer
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-cricket">
+    <!-- Header with Enhanced Branding -->
+    <header class="bg-white shadow-cricket border-b border-gray-200 cricket-pattern relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5"></div>
+        <div class="relative max-w-md mx-auto px-4 py-6">
+            <div class="text-center">
+                <!-- Logo and Title -->
+                <div class="flex items-center justify-center mb-2">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mr-3 animate-bounce-subtle">
+                        <span class="text-white text-xl font-bold">🏏</span>
+                    </div>
+                    <h1 class="text-2xl font-bold gradient-text">
+                        cricbuzz11
             </h1>
-            <p class="text-sm text-gray-600 text-center mt-1">
-                Upload screenshot & get AI analysis
-            </p>
+                </div>
+                <!-- Subtitle -->
+                <p class="text-sm text-gray-600 font-medium">
+                    Team Analyzer
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    AI-Powered Fantasy Cricket Analysis
+                </p>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Content with Enhanced Spacing -->
     <main class="max-w-md mx-auto px-4 py-6 space-y-6">
         
-        <!-- Upload Section -->
-        <section class="bg-white rounded-lg shadow-sm border p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Upload Team Screenshot</h2>
-            
-            <!-- File Upload Area -->
-            <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                <input type="file" id="file-input" accept="image/*" class="hidden">
-                <div id="upload-content">
-                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <p class="text-gray-600 mb-2">Tap to upload or drag & drop</p>
-                    <p class="text-sm text-gray-400">PNG, JPG up to 5MB</p>
+        <!-- Match Selection Section - New Priority -->
+        <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-6 card-hover animate-fade-in">
+            <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-cricket-blue to-secondary rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-white text-sm font-bold">⚡</span>
                 </div>
-                
-                <!-- Loading State -->
-                <div id="upload-loading" class="hidden">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p class="text-primary font-medium">Processing screenshot...</p>
-                </div>
+                <h2 class="text-lg font-bold text-gray-900">Match Selection</h2>
             </div>
-
-            <!-- Image Preview -->
-            <div id="image-preview" class="hidden mt-4">
-                <img id="preview-img" class="w-full h-48 object-cover rounded-lg border">
-                <button id="remove-image" class="mt-2 text-sm text-red-600 hover:text-red-800">Remove image</button>
-            </div>
-        </section>
-
-        <!-- Match Details Section -->
-        <section class="bg-white rounded-lg shadow-sm border p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Match Details</h2>
             
             <div class="space-y-4">
                 <!-- Team A -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Team A</label>
-                    <select id="team-a" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Team A</label>
+                    <select id="team-a" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white">
                         <option value="">Select Team A</option>
                     </select>
                 </div>
 
+                <!-- VS Indicator -->
+                <div class="flex justify-center">
+                    <div class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full text-sm font-bold shadow-md">
+                        VS
+                    </div>
+                </div>
+
                 <!-- Team B -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Team B</label>
-                    <select id="team-b" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Team B</label>
+                    <select id="team-b" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white">
                         <option value="">Select Team B</option>
                     </select>
                 </div>
 
                 <!-- Match Date -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Match Date</label>
-                    <input type="date" id="match-date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Match Date</label>
+                    <input type="date" id="match-date" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white">
                 </div>
+
+                <!-- Validate Match Button -->
+                <button id="validate-match-btn" class="w-full bg-gradient-to-r from-primary to-primary-light text-white py-3 px-4 rounded-xl font-semibold hover:from-primary-light hover:to-secondary transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    🔍 Validate Match
+                </button>
             </div>
         </section>
 
-        <!-- Extracted Team Data -->
-        <section id="team-data" class="bg-white rounded-lg shadow-sm border p-6 hidden">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Extracted Team Data</h2>
+        <!-- Upload Section with Enhanced Design -->
+        <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-6 card-hover animate-fade-in">
+            <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-success to-cricket-green rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-white text-sm font-bold">📱</span>
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">Upload Team Screenshot</h2>
+            </div>
             
-            <div id="team-info" class="space-y-4">
-                <!-- Players List -->
+            <!-- File Upload Area with Enhanced Styling -->
+            <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 cursor-pointer group">
+                <input type="file" id="file-input" accept="image/*" class="hidden">
+                <div id="upload-content">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-8 h-8 text-primary" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-700 mb-2 font-medium">Tap to upload or drag & drop</p>
+                    <p class="text-sm text-gray-500">PNG, JPG up to 5MB</p>
+                    <p class="text-xs text-gray-400 mt-2">📱 Fantasy cricket team screenshot</p>
+                </div>
+                
+                <!-- Loading State with Enhanced Animation -->
+                <div id="upload-loading" class="hidden">
+                    <div class="relative">
+                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-secondary animate-spin mx-auto mb-4" style="animation-duration: 1.5s;"></div>
+                    </div>
+                    <p class="text-primary font-semibold">Processing screenshot...</p>
+                    <p class="text-sm text-gray-500 mt-1">Extracting player data</p>
+                </div>
+            </div>
+
+            <!-- Image Preview with Enhanced Styling -->
+            <div id="image-preview" class="hidden mt-4">
+                <div class="relative rounded-xl overflow-hidden border-2 border-gray-200">
+                    <img id="preview-img" class="w-full h-48 object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
+                <button id="remove-image" class="mt-3 text-sm text-danger hover:text-danger/80 font-medium transition-colors duration-200">
+                    🗑️ Remove image
+                </button>
+            </div>
+        </section>
+
+        <!-- Extracted Team Data with Enhanced Display -->
+        <section id="team-data" class="bg-white rounded-xl shadow-cricket border border-gray-200 p-6 card-hover animate-slide-up hidden">
+            <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-warning to-accent rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-white text-sm font-bold">👥</span>
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">Extracted Team Data</h2>
+            </div>
+            
+            <div id="team-info" class="space-y-6">
+                <!-- Players List with Enhanced Styling -->
                 <div>
-                    <h3 class="font-medium text-gray-900 mb-2">Players (<span id="player-count">0</span>)</h3>
-                    <div id="players-list" class="space-y-1"></div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900">Players</h3>
+                        <span id="player-count" class="bg-primary text-white px-3 py-1 rounded-full text-sm font-bold">0</span>
+                    </div>
+                    <div id="players-list" class="space-y-2"></div>
                 </div>
 
-                <!-- Manual Captain & Vice-Captain Selection -->
+                <!-- Manual Captain & Vice-Captain Selection with Enhanced Design -->
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                    <h3 class="font-semibold text-gray-900 mb-4 text-center">Select Leadership</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Captain</label>
-                        <select id="captain-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Captain (C)</label>
+                            <select id="captain-select" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-warning focus:border-warning transition-all duration-200 bg-white text-sm">
                             <option value="">Choose Captain</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Vice-Captain</label>
-                        <select id="vice-captain-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Vice-Captain (VC)</label>
+                            <select id="vice-captain-select" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary transition-all duration-200 bg-white text-sm">
                             <option value="">Choose Vice-Captain</option>
                         </select>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Selected Captain & Vice-Captain Display -->
+                <!-- Selected Captain & Vice-Captain Display with Enhanced Cards -->
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <h4 class="font-medium text-gray-900 mb-1">Captain</h4>
-                        <p id="captain-name" class="text-sm text-gray-600 bg-yellow-50 p-2 rounded border">Not selected</p>
+                    <div class="bg-gradient-to-br from-warning/10 to-accent/10 rounded-xl p-4 border-2 border-warning/20">
+                        <div class="flex items-center mb-2">
+                            <span class="text-warning mr-2">👑</span>
+                            <h4 class="font-semibold text-gray-900">Captain</h4>
+                        </div>
+                        <p id="captain-name" class="text-sm text-gray-600 font-medium">Not selected</p>
                     </div>
-                    <div>
-                        <h4 class="font-medium text-gray-900 mb-1">Vice-Captain</h4>
-                        <p id="vice-captain-name" class="text-sm text-gray-600 bg-blue-50 p-2 rounded border">Not selected</p>
+                    <div class="bg-gradient-to-br from-secondary/10 to-cricket-blue/10 rounded-xl p-4 border-2 border-secondary/20">
+                        <div class="flex items-center mb-2">
+                            <span class="text-secondary mr-2">⭐</span>
+                            <h4 class="font-semibold text-gray-900">Vice-Captain</h4>
+                        </div>
+                        <p id="vice-captain-name" class="text-sm text-gray-600 font-medium">Not selected</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Analyze Button -->
-            <button id="analyze-btn" class="w-full mt-6 bg-secondary text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                🤖 Get AI Analysis
+            <!-- Action Buttons with Enhanced Styling -->
+            <div class="space-y-3 mt-6">
+                <button id="analyze-btn" class="w-full bg-gradient-to-r from-cricket-green to-success text-white py-4 px-4 rounded-xl font-semibold hover:from-success hover:to-cricket-green transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    📊 Analyze Team Performance
+                </button>
+                
+                <button id="summary-btn" class="w-full bg-gradient-to-r from-secondary to-cricket-blue text-white py-4 px-4 rounded-xl font-semibold hover:from-cricket-blue hover:to-secondary transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    ⭐ Get Team Summary & Rating
             </button>
+            </div>
         </section>
 
-        <!-- AI Analysis Section -->
-        <section id="ai-analysis" class="bg-white rounded-lg shadow-sm border p-6 hidden">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">🤖 AI Team Analysis</h2>
+        <!-- Enhanced Team Analysis Section -->
+        <section id="ai-analysis" class="bg-white rounded-xl shadow-cricket border border-gray-200 p-6 card-hover animate-slide-up hidden">
+            <div class="flex items-center mb-6">
+                <div class="w-8 h-8 bg-gradient-to-br from-cricket-green to-success rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-white text-sm font-bold">📊</span>
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">Team Analysis</h2>
+            </div>
             
+            <!-- Analysis Loading State -->
             <div id="analysis-loading" class="hidden text-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mx-auto mb-4"></div>
-                <p class="text-secondary font-medium">Analyzing your team...</p>
+                <div class="mb-4">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-cricket-green/20 border-t-cricket-green mx-auto"></div>
+                </div>
+                <p class="text-cricket-green font-semibold">Analyzing team performance...</p>
+                <p class="text-sm text-gray-500 mt-1">Fetching match data & statistics</p>
             </div>
 
-            <div id="analysis-content" class="hidden">
-                <div id="analysis-text" class="prose prose-sm max-w-none text-gray-700"></div>
+            <!-- Analysis Content -->
+            <div id="analysis-content" class="hidden space-y-6">
+                
+                <!-- Team Recent Form -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center">
+                        <span class="text-blue-600 mr-2">🏆</span>Recent Form (Last 5 Matches)
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 id="team-a-name" class="text-sm font-semibold text-gray-800 mb-2">Team A</h4>
+                            <div id="team-a-form" class="text-sm">
+                                <div class="text-gray-500">Loading...</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 id="team-b-name" class="text-sm font-semibold text-gray-800 mb-2">Team B</h4>
+                            <div id="team-b-form" class="text-sm">
+                                <div class="text-gray-500">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Head-to-Head -->
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
+                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center">
+                        <span class="text-purple-600 mr-2">⚔️</span>Head-to-Head Record
+                    </h3>
+                    <div id="head-to-head-content" class="text-sm">
+                        <div class="text-gray-500">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Captain & Vice-Captain Performance -->
+                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-100">
+                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center">
+                        <span class="text-yellow-600 mr-2">👑</span>Leadership Performance
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <h4 class="text-sm font-semibold text-yellow-700 mb-1">
+                                Captain: <span id="captain-performance-name">Loading...</span>
+                            </h4>
+                            <div id="captain-performance" class="text-sm">
+                                <div class="text-gray-500">Loading...</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-blue-700 mb-1">
+                                Vice-Captain: <span id="vice-captain-performance-name">Loading...</span>
+                            </h4>
+                            <div id="vice-captain-performance" class="text-sm">
+                                <div class="text-gray-500">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Venue Statistics -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center">
+                        <span class="text-green-600 mr-2">🏟️</span>Venue Analysis
+                    </h3>
+                    <div id="venue-stats-content" class="text-sm">
+                        <div class="text-gray-500">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Team Balance Analysis -->
+                <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-100">
+                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center">
+                        <span class="text-gray-600 mr-2">⚖️</span>Team Composition
+                    </h3>
+                    <div id="team-balance-content" class="text-sm">
+                        <div class="text-gray-500">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Summarize Button -->
+                <div class="text-center mt-6">
+                    <button id="summarize-btn" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-8 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        📋 Generate Team Summary
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Team Summary Section (New) -->
+        <section id="team-summary" class="bg-white rounded-xl shadow-cricket border border-gray-200 p-6 card-hover animate-slide-up hidden">
+            <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-secondary to-cricket-blue rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-white text-sm font-bold">⭐</span>
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">Team Summary & Rating</h2>
+            </div>
+
+            <div id="summary-loading" class="hidden text-center py-8">
+                <div class="mb-4">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-secondary/20 border-t-secondary mx-auto"></div>
+                </div>
+                <p class="text-secondary font-semibold">Generating team rating...</p>
+                <p class="text-sm text-gray-500 mt-1">Evaluating composition & form</p>
+            </div>
+
+            <div id="summary-content" class="hidden">
+                <div id="summary-text" class="space-y-4"></div>
             </div>
         </section>
     </main>
 
-    <!-- Error Messages -->
-    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-red-500 text-white p-4 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+    <!-- Enhanced Toast Messages -->
+    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-danger to-red-600 text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
         <div class="flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
             </svg>
-            <span id="error-message"></span>
+            </div>
+            <span id="error-message" class="font-medium"></span>
         </div>
     </div>
 
-    <!-- Success Messages -->
-    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-green-500 text-white p-4 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-success to-cricket-green text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
         <div class="flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
             </svg>
-            <span id="success-message"></span>
+            </div>
+            <span id="success-message" class="font-medium"></span>
+        </div>
+    </div>
+
+    <!-- Player Selection Modal -->
+    <div id="player-selection-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden animate-scale-in">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-primary to-primary-light text-white p-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold">🏏 Select Player</h3>
+                    <button id="close-modal" class="text-white/80 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p id="modal-subtitle" class="text-white/90 text-sm mt-1">Choose from available players</p>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-4">
+                <!-- Search Input -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Search Players</label>
+                    <input type="text" id="player-search" placeholder="Type to search..." 
+                           class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200">
+                </div>
+
+                <!-- Team Filter -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Filter by Team</label>
+                    <select id="team-filter" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200">
+                        <option value="">All Teams</option>
+                    </select>
+                </div>
+
+                <!-- Players List -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Available Players</label>
+                    <div id="modal-players-list" class="max-h-64 overflow-y-auto space-y-2 border border-gray-200 rounded-xl p-2"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    <button id="cancel-selection" class="w-full bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-300 transition-colors">
+                        Cancel Selection
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

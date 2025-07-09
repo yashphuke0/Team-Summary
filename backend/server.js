@@ -12,12 +12,14 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+console.log('🏏 Starting cricbuzz11 Team Analyzer Backend...');
+
 // Supabase connection setup
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-    console.error('ERROR: Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_ANON_KEY in environment variables.');
+    console.error('❌ ERROR: Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_ANON_KEY in environment variables.');
     process.exit(1);
 }
 
@@ -28,9 +30,9 @@ async function testSupabaseConnection() {
     try {
         const { data, error } = await supabase.from('teams').select('count').limit(1);
         if (error) throw error;
-        console.log('SUCCESS: Supabase connected successfully');
+        console.log('✅ Supabase connected successfully');
     } catch (err) {
-        console.error('ERROR: Supabase connection failed:', err.message);
+        console.error('❌ ERROR: Supabase connection failed:', err.message);
     }
 }
 
@@ -312,15 +314,57 @@ function parseTeamDataFromOCRText(ocrText) {
         console.log(`  ${index + 1}. ${player.name} (${player.role})`);
     });
 
+    // Enhanced logic to ensure we try to get closer to 11 players
+    let finalPlayers = uniquePlayers.map(p => p.name);
+    
+    // If we have less than 8 players, try more aggressive parsing
+    if (finalPlayers.length < 8) {
+        console.log(`⚠️ Only found ${finalPlayers.length} players, attempting more aggressive parsing...`);
+        
+        // Secondary pass with more lenient rules
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // Skip if already processed
+            if (finalPlayers.some(player => player.toLowerCase().includes(line.toLowerCase()) || line.toLowerCase().includes(player.toLowerCase()))) {
+                continue;
+            }
+            
+            // More lenient player name check
+            if (line.length >= 3 && line.length <= 20 && 
+                /^[A-Za-z\s\.\-']+$/.test(line) && 
+                !/^(CSK|MI|RCB|KKR|DC|PBKS|RR|SRH|GT|LSG|BATTER|BOWLER|WICKET|KEEPER|ALL|ROUNDER)$/i.test(line)) {
+                
+                const cleanName = line.replace(/\d+/g, '').replace(/\s+/g, ' ').trim();
+                if (cleanName.length >= 3 && !finalPlayers.includes(cleanName)) {
+                    console.log(`SECONDARY: Additional player found: "${cleanName}"`);
+                    finalPlayers.push(cleanName);
+                    
+                    if (finalPlayers.length >= 11) break;
+                }
+            }
+        }
+    }
+
+    // Limit to 11 players max
+    finalPlayers = finalPlayers.slice(0, 11);
+    
+    console.log(`🏏 FINAL RESULT: ${finalPlayers.length} players extracted for fantasy team validation`);
+    finalPlayers.forEach((player, index) => {
+        console.log(`  ${index + 1}. ${player}`);
+    });
+
     // Captain and vice-captain will be handled manually by the user
     const captain = '';
     const viceCaptain = '';
 
     return {
-        players: uniquePlayers.map(p => p.name).slice(0, 11), // Ensure max 11 players
+        players: finalPlayers,
         captain: captain,
         vice_captain: viceCaptain,
-        playerDetails: uniquePlayers.slice(0, 11)
+        playerDetails: uniquePlayers.slice(0, 11),
+        extractedCount: finalPlayers.length,
+        expectedCount: 11
     };
 }
 
@@ -330,8 +374,10 @@ function parseTeamDataFromOCRText(ocrText) {
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'healthy',
+        message: 'cricbuzz11 Team Analyzer Backend is running',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        version: '2.0.0'
     });
 });
 
@@ -339,9 +385,347 @@ app.get('/api/health', (req, res) => {
 app.get('/api/teams', (req, res) => {
     res.json({
         success: true,
-        teams: iplTeams
+        teams: iplTeams,
+        message: 'IPL 2025 teams list'
     });
 });
+
+// ==============================================
+// CRICBUZZ11 ENHANCED VALIDATION ENDPOINTS
+// ==============================================
+
+// Validate match exists in database
+app.post('/api/validate-match', async (req, res) => {
+    try {
+        const { teamA, teamB, matchDate } = req.body;
+
+        if (!teamA || !teamB || !matchDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Team A, Team B, and match date are required'
+            });
+        }
+
+        if (teamA === teamB) {
+            return res.status(400).json({
+                success: false,
+                message: 'Team A and Team B must be different'
+            });
+        }
+
+        console.log(`🔍 Validating match: ${teamA} vs ${teamB} on ${matchDate}`);
+
+        // Check if teams exist in database
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('team_id, team_name')
+            .in('team_name', [teamA, teamB]);
+
+        if (teamsError) throw teamsError;
+
+        if (teams.length < 2) {
+            const missingTeams = [teamA, teamB].filter(team => 
+                !teams.find(t => t.team_name === team)
+            );
+            return res.status(400).json({
+                success: false,
+                message: `Teams not found in database: ${missingTeams.join(', ')}`,
+                availableTeams: iplTeams
+            });
+        }
+
+        // Check if specific match exists
+        const teamIds = teams.map(t => t.team_id);
+        const { data: matches, error: matchError } = await supabase
+            .from('matches')
+            .select('match_id, match_date, team1_id, team2_id')
+            .eq('match_date', matchDate)
+            .or(`and(team1_id.eq.${teamIds[0]},team2_id.eq.${teamIds[1]}),and(team1_id.eq.${teamIds[1]},team2_id.eq.${teamIds[0]})`);
+
+        if (matchError) throw matchError;
+
+        const matchExists = matches && matches.length > 0;
+
+        if (matchExists) {
+            console.log(`✅ Match found in database: ${teamA} vs ${teamB} on ${matchDate}`);
+            res.json({
+                success: true,
+                matchExists: true,
+                matchId: matches[0].match_id,
+                message: `Match validated: ${teamA} vs ${teamB} on ${matchDate}`,
+                teams: { teamA, teamB },
+                matchDate
+            });
+        } else {
+            console.log(`⚠️ Match not found in database, but teams are valid`);
+            res.json({
+                success: true,
+                matchExists: false,
+                message: `Match not found in database, but teams are valid. Proceeding with analysis using available data.`,
+                teams: { teamA, teamB },
+                matchDate,
+                warning: 'Limited historical data available for this specific match'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Match validation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to validate match',
+            error: error.message
+        });
+    }
+});
+
+// Validate players and provide suggestions
+app.post('/api/validate-players', async (req, res) => {
+    try {
+        const { players, teamA, teamB } = req.body;
+
+        if (!players || !Array.isArray(players) || players.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Players array is required'
+            });
+        }
+
+        if (!teamA || !teamB) {
+            return res.status(400).json({
+                success: false,
+                message: 'Team A and Team B are required for player validation'
+            });
+        }
+
+        // Get team data
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('team_id, team_name')
+            .in('team_name', [teamA, teamB]);
+
+        if (teamsError) throw teamsError;
+
+        if (teams.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'Teams not found in database'
+            });
+        }
+
+        const teamIds = teams.map(t => t.team_id);
+
+        // Get active players for selected teams
+        const { data: playerMatchData, error: matchStatsError } = await supabase
+            .from('player_match_stats')
+            .select(`
+                player_id,
+                team_id,
+                players!inner(player_name, role, is_active)
+            `)
+            .in('team_id', teamIds)
+            .eq('players.is_active', true);
+
+        if (matchStatsError) throw matchStatsError;
+
+        // Process to get unique players with their most frequent team
+        const playerTeamCounts = {};
+        
+        playerMatchData.forEach(record => {
+            const playerId = record.player_id;
+            const teamId = record.team_id;
+            
+            if (!playerTeamCounts[playerId]) {
+                playerTeamCounts[playerId] = {
+                    player_name: record.players.player_name,
+                    role: record.players.role,
+                    teams: {}
+                };
+            }
+            
+            if (!playerTeamCounts[playerId].teams[teamId]) {
+                playerTeamCounts[playerId].teams[teamId] = 0;
+            }
+            
+            playerTeamCounts[playerId].teams[teamId]++;
+        });
+
+        // Create final player list with most frequent team assignment
+        const playersWithTeams = Object.keys(playerTeamCounts).map(playerId => {
+            const playerData = playerTeamCounts[playerId];
+            const teamCounts = playerData.teams;
+            
+            // Find most frequent team
+            const mostFrequentTeamId = Object.keys(teamCounts).reduce((a, b) => 
+                teamCounts[a] > teamCounts[b] ? a : b
+            );
+            
+            const playerTeam = teams.find(team => team.team_id === parseInt(mostFrequentTeamId));
+            
+            return {
+                player_id: parseInt(playerId),
+                player_name: playerData.player_name,
+                role: playerData.role,
+                team_id: parseInt(mostFrequentTeamId),
+                team_name: playerTeam ? playerTeam.team_name : 'Unknown Team',
+                match_count: teamCounts[mostFrequentTeamId]
+            };
+        });
+
+        // Ensure exactly 11 players for fantasy cricket team
+        const processedPlayers = players.slice(0, 11);
+        while (processedPlayers.length < 11) {
+            processedPlayers.push(`Player ${processedPlayers.length + 1} (Missing)`);
+        }
+
+        // Validate each player and provide suggestions
+        const validationResults = processedPlayers.map(playerName => {
+            const trimmedName = playerName.trim();
+            
+            // Skip empty or placeholder names
+            if (!trimmedName || trimmedName.includes('(Missing)')) {
+                return {
+                    inputName: playerName,
+                    validatedName: null,
+                    playerId: null,
+                    role: null,
+                    team: null,
+                    isValid: false,
+                    confidence: 0,
+                    suggestions: [],
+                    isMissing: true
+                };
+            }
+            
+            // Exact match
+            const exactMatch = playersWithTeams.find(p => 
+                p.player_name.toLowerCase() === trimmedName.toLowerCase()
+            );
+
+            if (exactMatch) {
+                return {
+                    inputName: playerName,
+                    validatedName: exactMatch.player_name,
+                    playerId: exactMatch.player_id,
+                    role: exactMatch.role,
+                    team: exactMatch.team_name,
+                    isValid: true,
+                    confidence: 1.0
+                };
+            }
+
+            // Fuzzy match - find similar names
+            const suggestions = playersWithTeams
+                .map(p => ({
+                    ...p,
+                    similarity: calculateSimilarity(trimmedName.toLowerCase(), p.player_name.toLowerCase())
+                }))
+                .filter(p => p.similarity > 0.3) // Lower threshold for better suggestions
+                .sort((a, b) => b.similarity - a.similarity)
+                .slice(0, 5); // Show top 5 suggestions
+
+            // Auto-replace if high confidence match (80%+ similarity)
+            if (suggestions.length > 0 && suggestions[0].similarity >= 0.8) {
+                const bestMatch = suggestions[0];
+                return {
+                    inputName: playerName,
+                    validatedName: bestMatch.player_name,
+                    playerId: bestMatch.player_id,
+                    role: bestMatch.role,
+                    team: bestMatch.team_name,
+                    isValid: true,
+                    confidence: bestMatch.similarity,
+                    autoReplaced: true
+                };
+            }
+
+            // Convert suggestions to format expected by frontend
+            const formattedSuggestions = suggestions.map(p => ({
+                playerId: p.player_id,
+                playerName: p.player_name,
+                role: p.role,
+                team: p.team_name,
+                similarity: p.similarity
+            }));
+
+            return {
+                inputName: playerName,
+                validatedName: null,
+                playerId: null,
+                role: null,
+                team: null,
+                isValid: false,
+                confidence: 0,
+                suggestions: formattedSuggestions
+            };
+        });
+
+        const validPlayers = validationResults.filter(p => p.isValid);
+        const invalidPlayers = validationResults.filter(p => !p.isValid && !p.isMissing);
+        const missingPlayers = validationResults.filter(p => p.isMissing);
+
+        res.json({
+            success: true,
+            totalPlayers: 11, // Always 11 for fantasy cricket
+            extractedPlayers: players.length, // Actual extracted count
+            validPlayers: validPlayers.length,
+            invalidPlayers: invalidPlayers.length,
+            missingPlayers: missingPlayers.length,
+            validationResults,
+            message: `Validated ${validPlayers.length} out of 11 players${missingPlayers.length > 0 ? ` (${missingPlayers.length} missing from screenshot)` : ''}`,
+            requiresCorrection: invalidPlayers.length > 0 || missingPlayers.length > 0,
+            availablePlayersCount: playersWithTeams.length,
+            availablePlayers: playersWithTeams.sort((a, b) => a.player_name.localeCompare(b.player_name))
+        });
+
+    } catch (error) {
+        console.error('❌ Player validation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to validate players',
+            error: error.message
+        });
+    }
+});
+
+// Helper function for string similarity
+function calculateSimilarity(str1, str2) {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    // Levenshtein distance
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+}
+
+function levenshteinDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
+}
 
 // Test Supabase - Get teams from database
 app.get('/api/teams/supabase', async (req, res) => {
@@ -374,6 +758,157 @@ app.get('/api/teams/supabase', async (req, res) => {
             message: 'Supabase connection failed',
             error: error.message,
             supabaseWorking: false
+        });
+    }
+});
+
+// DEBUG: Check players for specific teams
+app.post('/api/debug/players', async (req, res) => {
+    try {
+        const { teamA, teamB } = req.body;
+        
+        console.log(`🔍 DEBUG: Checking players for teams: ${teamA}, ${teamB}`);
+        
+        // Get team IDs
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('team_id, team_name')
+            .in('team_name', [teamA, teamB]);
+
+        if (teamsError) throw teamsError;
+
+        console.log('Found teams:', teams);
+
+        if (teams.length === 0) {
+            return res.json({
+                success: false,
+                message: 'No teams found',
+                availableTeams: [],
+                players: []
+            });
+        }
+
+        const teamIds = teams.map(t => t.team_id);
+        console.log('Team IDs:', teamIds);
+
+        // Get players who have actually played for these teams using player_match_stats
+        const { data: playerMatchData, error: matchStatsError } = await supabase
+            .from('player_match_stats')
+            .select(`
+                player_id,
+                team_id,
+                players!inner(player_name, role, is_active)
+            `)
+            .in('team_id', teamIds)
+            .eq('players.is_active', true);
+
+        if (matchStatsError) throw matchStatsError;
+
+        console.log(`Found ${playerMatchData.length} player-match records`);
+
+        // Process to get unique players with their most frequent team
+        const playerTeamCounts = {};
+        
+        playerMatchData.forEach(record => {
+            const playerId = record.player_id;
+            const teamId = record.team_id;
+            
+            if (!playerTeamCounts[playerId]) {
+                playerTeamCounts[playerId] = {
+                    player_name: record.players.player_name,
+                    role: record.players.role,
+                    teams: {}
+                };
+            }
+            
+            if (!playerTeamCounts[playerId].teams[teamId]) {
+                playerTeamCounts[playerId].teams[teamId] = 0;
+            }
+            
+            playerTeamCounts[playerId].teams[teamId]++;
+        });
+
+        // Create final player list
+        const playersWithTeams = Object.keys(playerTeamCounts).map(playerId => {
+            const playerData = playerTeamCounts[playerId];
+            const teamCounts = playerData.teams;
+            
+            // Find most frequent team
+            const mostFrequentTeamId = Object.keys(teamCounts).reduce((a, b) => 
+                teamCounts[a] > teamCounts[b] ? a : b
+            );
+            
+            const playerTeam = teams.find(team => team.team_id === parseInt(mostFrequentTeamId));
+            
+            return {
+                player_id: parseInt(playerId),
+                player_name: playerData.player_name,
+                role: playerData.role,
+                team_id: parseInt(mostFrequentTeamId),
+                team_name: playerTeam ? playerTeam.team_name : 'Unknown Team',
+                match_count: teamCounts[mostFrequentTeamId]
+            };
+        });
+
+        console.log(`Processed ${playersWithTeams.length} unique players`);
+
+        res.json({
+            success: true,
+            teams: teams,
+            players: playersWithTeams,
+            totalPlayers: playersWithTeams.length,
+            message: `Found ${playersWithTeams.length} players for the selected teams`
+        });
+
+    } catch (error) {
+        console.error('❌ DEBUG players error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch players',
+            error: error.message
+        });
+    }
+});
+
+// DEBUG: Check all players in database
+app.get('/api/debug/all-players', async (req, res) => {
+    try {
+        console.log('🔍 DEBUG: Checking ALL players in database...');
+        
+        // Get total count of all players
+        const { data: allPlayers, error: playersError } = await supabase
+            .from('players')
+            .select('player_id, player_name, role, team_id, is_active')
+            .limit(20); // Limit to first 20 for testing
+
+        if (playersError) throw playersError;
+
+        console.log(`Found ${allPlayers ? allPlayers.length : 0} players total`);
+
+        // Get active players count
+        const { data: activePlayers, error: activeError } = await supabase
+            .from('players')
+            .select('player_id, player_name, role, team_id')
+            .eq('is_active', true)
+            .limit(20);
+
+        if (activeError) throw activeError;
+
+        res.json({
+            success: true,
+            totalPlayersInDB: allPlayers ? allPlayers.length : 0,
+            activePlayersInDB: activePlayers ? activePlayers.length : 0,
+            samplePlayers: allPlayers || [],
+            sampleActivePlayers: activePlayers || [],
+            message: `Database check: ${allPlayers ? allPlayers.length : 0} total players, ${activePlayers ? activePlayers.length : 0} active players`
+        });
+
+    } catch (error) {
+        console.error('❌ DEBUG all players error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch all players',
+            error: error.message
         });
     }
 });
@@ -751,11 +1286,7 @@ app.post('/api/head-to-head', async (req, res) => {
         const teamAId = teams.find(t => t.team_name === teamA)?.team_id;
         const teamBId = teams.find(t => t.team_name === teamB)?.team_id;
 
-        // Last 5 years from match date
-        const fiveYearsAgo = new Date(matchDate);
-        fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
-
-        // Get head-to-head matches using Supabase
+        // Get ALL head-to-head matches (no time limit)
         const { data: matches, error: matchesError } = await supabase
             .from('matches')
             .select(`
@@ -770,7 +1301,6 @@ app.post('/api/head-to-head', async (req, res) => {
             `)
             .or(`and(team1_id.eq.${teamAId},team2_id.eq.${teamBId}),and(team1_id.eq.${teamBId},team2_id.eq.${teamAId})`)
             .lt('match_date', matchDate)
-            .gte('match_date', fiveYearsAgo.toISOString().split('T')[0])
             .order('match_date', { ascending: false });
 
         if (matchesError) throw matchesError;
@@ -780,8 +1310,8 @@ app.post('/api/head-to-head', async (req, res) => {
         const teamBWins = matches.filter(match => match.winner_team_id === teamBId).length;
         const draws = matches.filter(match => !match.winner_team_id).length;
 
-        // Format recent matches
-        const recentMatches = matches.slice(0, 10).map(match => ({
+        // Format ALL historical matches (not just recent)
+        const allHistoricalMatches = matches.map(match => ({
             match_id: match.match_id,
             match_date: match.match_date,
             team1: match.teams_team1?.team_name || teamA,
@@ -789,7 +1319,7 @@ app.post('/api/head-to-head', async (req, res) => {
             winner: match.teams_winner?.team_name || null
         }));
 
-        console.log(`SUCCESS: Found ${matches.length} head-to-head matches in last 5 years`);
+        console.log(`SUCCESS: Found ${matches.length} total head-to-head matches`);
 
         res.json({
             success: true,
@@ -800,7 +1330,7 @@ app.post('/api/head-to-head', async (req, res) => {
                 teamAWins: teamAWins,
                 teamBWins: teamBWins,
                 draws: draws,
-                recentMatches: recentMatches
+                allHistoricalMatches: allHistoricalMatches
             },
             supabaseQuery: true
         });
@@ -828,10 +1358,10 @@ app.post('/api/player-performance', async (req, res) => {
 
         console.log(`INFO: Getting player performance for ${captain} and ${viceCaptain} before ${matchDate}`);
 
-        // Step 1: Get player IDs first
+        // Step 1: Get player IDs and roles first
         const { data: players, error: playersError } = await supabase
             .from('players')
-            .select('player_id, player_name')
+            .select('player_id, player_name, role')
             .in('player_name', [captain, viceCaptain]);
 
         if (playersError) {
@@ -843,15 +1373,17 @@ app.post('/api/player-performance', async (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    captain: { name: captain, recentMatches: [] },
-                    viceCaptain: { name: viceCaptain, recentMatches: [] }
+                    captain: { name: captain, role: 'unknown', recentMatches: [] },
+                    viceCaptain: { name: viceCaptain, role: 'unknown', recentMatches: [] }
                 },
                 message: 'No players found in database'
             });
         }
 
-        const captainId = players.find(p => p.player_name === captain)?.player_id;
-        const viceCaptainId = players.find(p => p.player_name === viceCaptain)?.player_id;
+        const captainData = players.find(p => p.player_name === captain);
+        const viceCaptainData = players.find(p => p.player_name === viceCaptain);
+        const captainId = captainData?.player_id;
+        const viceCaptainId = viceCaptainData?.player_id;
 
         // Step 2: Get matches before the specified date for ordering
         const { data: recentMatches, error: matchesError } = await supabase
@@ -899,8 +1431,8 @@ app.post('/api/player-performance', async (req, res) => {
             throw statsError;
         }
 
-        // Step 4: Process and sort the results
-        const processPlayerStats = (playerId, playerName) => {
+        // Step 4: Process and sort the results with role-based filtering
+        const processPlayerStats = (playerId, playerName, playerRole) => {
             if (!playerId) return [];
             
             const stats = playerStats
@@ -911,6 +1443,7 @@ app.post('/api/player-performance', async (req, res) => {
                         match_id: stat.match_id,
                         match_date: match?.match_date,
                         player_name: playerName,
+                        role: playerRole,
                         runs_scored: stat.runs_scored || 0,
                         wickets_taken: stat.wickets_taken || 0,
                         balls_faced: stat.balls_faced || 0,
@@ -924,8 +1457,8 @@ app.post('/api/player-performance', async (req, res) => {
             return stats;
         };
 
-        const captainStats = processPlayerStats(captainId, captain);
-        const viceCaptainStats = processPlayerStats(viceCaptainId, viceCaptain);
+        const captainStats = processPlayerStats(captainId, captain, captainData?.role || 'unknown');
+        const viceCaptainStats = processPlayerStats(viceCaptainId, viceCaptain, viceCaptainData?.role || 'unknown');
 
         console.log(`✅ Found ${captainStats.length} matches for ${captain}, ${viceCaptainStats.length} matches for ${viceCaptain}`);
 
@@ -934,10 +1467,12 @@ app.post('/api/player-performance', async (req, res) => {
             data: {
                 captain: {
                     name: captain,
+                    role: captainData?.role || 'unknown',
                     recentMatches: captainStats
                 },
                 viceCaptain: {
                     name: viceCaptain,
+                    role: viceCaptainData?.role || 'unknown',
                     recentMatches: viceCaptainStats
                 }
             },
@@ -1086,7 +1621,70 @@ app.post('/api/venue-stats', async (req, res) => {
         const avgSecondInnings = secondInningsScores.length > 0 ? 
             Math.round((secondInningsScores.reduce((a, b) => a + b, 0) / secondInningsScores.length) * 100) / 100 : 0;
 
-        console.log(`✅ Found venue stats for ${venueInfo?.venue_name}: ${historicalMatches.length} matches`);
+        // Enhanced pitch analysis logic
+        const avgScore = (avgFirstInnings + avgSecondInnings) / 2;
+        const avgWicketsPerMatch = historicalMatches.length > 0 ? totalWickets / historicalMatches.length : 0;
+        
+        // Determine pitch type based on multiple factors
+        let pitchType = 'neutral';
+        let pitchRating = 'balanced';
+        
+        if (avgScore >= 180 && avgWicketsPerMatch <= 12) {
+            pitchType = 'batting';
+            pitchRating = 'high-scoring batting paradise';
+        } else if (avgScore >= 160 && avgWicketsPerMatch <= 14) {
+            pitchType = 'batting';
+            pitchRating = 'good for batting';
+        } else if (avgScore <= 140 && avgWicketsPerMatch >= 16) {
+            pitchType = 'bowling';
+            pitchRating = 'bowler-friendly surface';
+        } else if (avgScore <= 150 && avgWicketsPerMatch >= 15) {
+            pitchType = 'bowling';
+            pitchRating = 'assists bowlers';
+        } else {
+            pitchType = 'neutral';
+            pitchRating = 'balanced conditions';
+        }
+
+        // Calculate chase success rate
+        const chaseAttempts = secondInningsScores.length;
+        const successfulChases = secondInningsScores.filter((score, index) => 
+            score > firstInningsScores[index]
+        ).length;
+        const chaseSuccessRate = chaseAttempts > 0 ? 
+            Math.round((successfulChases / chaseAttempts) * 100) : 0;
+
+        // Step 5: Get team-specific performance at this venue
+        const { data: teamVenueMatches, error: teamVenueError } = await supabase
+            .from('matches')
+            .select(`
+                match_id,
+                team1_id,
+                team2_id,
+                winner_team_id,
+                match_date
+            `)
+            .eq('venue_id', venueId)
+            .or(`team1_id.eq.${teamAId},team2_id.eq.${teamAId},team1_id.eq.${teamBId},team2_id.eq.${teamBId}`)
+            .lt('match_date', matchDate);
+
+        if (teamVenueError) throw teamVenueError;
+
+        // Calculate team-specific stats
+        const teamAMatches = teamVenueMatches?.filter(m => 
+            m.team1_id === teamAId || m.team2_id === teamAId
+        ) || [];
+        const teamBMatches = teamVenueMatches?.filter(m => 
+            m.team1_id === teamBId || m.team2_id === teamBId
+        ) || [];
+
+        const teamAWinsAtVenue = teamAMatches.filter(m => m.winner_team_id === teamAId).length;
+        const teamBWinsAtVenue = teamBMatches.filter(m => m.winner_team_id === teamBId).length;
+
+        const teamAVenueRecord = `${teamAWinsAtVenue}/${teamAMatches.length}`;
+        const teamBVenueRecord = `${teamBWinsAtVenue}/${teamBMatches.length}`;
+
+        console.log(`✅ Found venue stats for ${venueInfo?.venue_name}: ${historicalMatches.length} matches, ${pitchType} pitch`);
 
         res.json({
             success: true,
@@ -1097,7 +1695,27 @@ app.post('/api/venue-stats', async (req, res) => {
                     total_matches: historicalMatches.length,
                     avg_first_innings_score: avgFirstInnings,
                     avg_second_innings_score: avgSecondInnings,
-                    total_wickets: totalWickets
+                    avg_total_score: avgScore,
+                    total_wickets: totalWickets,
+                    avg_wickets_per_match: Math.round(avgWicketsPerMatch * 100) / 100,
+                    pitch_type: pitchType,
+                    pitch_rating: pitchRating,
+                    chase_success_rate: chaseSuccessRate,
+                    toss_decision_suggestion: chaseSuccessRate >= 60 ? 'field first' : 'bat first',
+                    team_venue_performance: {
+                        [teamA]: {
+                            matches: teamAMatches.length,
+                            wins: teamAWinsAtVenue,
+                            record: teamAVenueRecord,
+                            win_percentage: teamAMatches.length > 0 ? Math.round((teamAWinsAtVenue / teamAMatches.length) * 100) : 0
+                        },
+                        [teamB]: {
+                            matches: teamBMatches.length,
+                            wins: teamBWinsAtVenue,
+                            record: teamBVenueRecord,
+                            win_percentage: teamBMatches.length > 0 ? Math.round((teamBWinsAtVenue / teamBMatches.length) * 100) : 0
+                        }
+                    }
                 }
             },
             supabaseQuery: true
@@ -1351,6 +1969,8 @@ Keep each point to 1 line maximum. Focus on actionable insights.`;
     }
 });
 
+
+
 // Helper functions for team analysis
 function analyzeTeamComposition(players) {
     // This is a simplified analysis - in a real app, you'd have player role data
@@ -1520,10 +2140,16 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Dream11 Analyzer Backend running on port ${PORT}`);
-    console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(` OCR API: ${process.env.OCR_API_KEY ? 'Configured' : 'Missing'}`);
-    console.log(` OpenAI API: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Missing'}`);
+    console.log('🏏 ===================================');
+    console.log('🏏  cricbuzz11 Team Analyzer Backend  ');
+    console.log('🏏 ===================================');
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔍 OCR API: ${process.env.OCR_API_KEY ? '✅ Configured' : '❌ Missing'}`);
+    console.log(`🤖 OpenAI API: ${process.env.OPENAI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
+    console.log(`📊 Supabase: ${process.env.SUPABASE_URL ? '✅ Configured' : '❌ Missing'}`);
+    console.log('🏏 Ready for enhanced cricket analysis!');
+    console.log('🏏 ===================================');
 });
 
 // Graceful shutdown
