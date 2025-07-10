@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi Team Analysis - cricbuzz11 Team Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Team Summary Mobile UI Design System
+                        primary: '#11755d',      // Primary green
+                        secondary: '#FFFFFF',    // White
+                        background: {
+                            main: '#6B21A8',
+                            gradient: 'linear-gradient(135deg, #6B21A8 0%, #4C1D95 100%)',
+                            cards: '#FFFFFF',
+                            darkCards: '#1F2937'
+                        },
+                        text: {
+                            primary: '#000000',
+                            secondary: '#6B7280',
+                            inverse: '#FFFFFF',
+                            muted: '#9CA3AF'
+                        },
+                        status: {
+                            success: '#10B981',
+                            error: '#EF4444',
+                            warning: '#F59E0B',
+                            info: '#3B82F6',
+                            neutral: '#6B7280'
+                        },
+                        ui: {
+                            border: '#E5E7EB',
+                            divider: '#F3F4F6',
+                            overlay: 'rgba(0, 0, 0, 0.5)',
+                            shadow: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    fontFamily: {
+                        'primary': ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        'numeric': ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'monospace']
+                    },
+                    spacing: {
+                        'xs': '4px',
+                        'sm': '8px',
+                        'md': '16px',
+                        'lg': '24px',
+                        'xl': '32px',
+                        '2xl': '48px',
+                        '3xl': '64px'
+                    },
+                    borderRadius: {
+                        'sm': '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '24px',
+                        'full': '9999px'
+                    },
+                    boxShadow: {
+                        'sm': '0 2px 4px rgba(0, 0, 0, 0.05)',
+                        'md': '0 4px 12px rgba(0, 0, 0, 0.08)',
+                        'lg': '0 8px 24px rgba(0, 0, 0, 0.12)',
+                        'xl': '0 16px 32px rgba(0, 0, 0, 0.16)'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-subtle': 'bounceSubtle 2s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounceSubtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #0f4c75 0%, #3282b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cricket-pattern {
+            background-image: 
+                radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 2px),
+                radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2px, transparent 2px);
+            background-size: 100px 100px;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(15, 76, 117, 0.1), 0 10px 10px -5px rgba(15, 76, 117, 0.04);
+        }
+        /* Modal styles */
+        .modal-open {
+            overflow: hidden;
+        }
+        
+        /* Player validation card animations */
+        .player-card-enter {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        .player-card-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        /* Validation status colors */
+        .validation-valid {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        
+        .validation-invalid {
+            border-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        
+        .validation-missing {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-cricket">
+    <!-- Header with Enhanced Branding -->
+    <header class="bg-white shadow-cricket border-b border-gray-200 cricket-pattern relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5"></div>
+        <div class="relative max-w-md mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <!-- Logo and Title -->
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mr-3 animate-bounce-subtle">
+                        <span class="text-white text-xl font-bold">🏏</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold gradient-text">
+                            cricbuzz11
+                        </h1>
+                        <p class="text-xs sm:text-sm text-gray-600 font-medium">
+                            Multi Team Analyzer
+                        </p>
+                    </div>
+                </div>
+                <a href="index.html" class="bg-gradient-to-r from-primary to-primary-light text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:from-primary-light hover:to-secondary transition-all duration-300 shadow-md">
+                    ← Single
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content with Enhanced Spacing -->
+    <main class="max-w-md mx-auto px-4 py-6 space-y-6">
+        
+        <!-- Match Details Section - FIRST STEP -->
+        <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-6 card-hover animate-fade-in">
+            <div class="flex items-center mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-cricket-blue to-secondary rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-white text-sm font-bold">⚡</span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">Step 1: Match Details</h2>
+                    <p class="text-sm text-gray-600">Select teams and validate match before uploading teams</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Team A -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Team A</label>
+                    <select id="team-a" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white">
+                        <option value="">Select Team A</option>
+                    </select>
+                </div>
+
+                <!-- VS Indicator -->
+                <div class="flex justify-center">
+                    <div class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full text-sm font-bold shadow-md">
+                        VS
+                    </div>
+                </div>
+
+                <!-- Team B -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Team B</label>
+                    <select id="team-b" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white">
+                        <option value="">Select Team B</option>
+                    </select>
+                </div>
+
+                <!-- Match Date -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Match Date</label>
+                    <input type="date" id="match-date" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white">
+                </div>
+
+                <!-- Validate Match Button -->
+                <button id="validate-match-btn" class="w-full bg-gradient-to-r from-primary to-primary-light text-white py-3 px-4 rounded-xl font-semibold hover:from-primary-light hover:to-secondary transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    🔍 Validate Match
+                </button>
+            </div>
+        </section>
+
+        <!-- Upload Methods Tabs - SECOND STEP -->
+        <section id="upload-section" class="bg-white rounded-xl shadow-cricket border border-gray-200 card-hover animate-fade-in hidden">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button id="csv-tab" class="border-primary text-primary whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm active">
+                        📊 CSV Upload
+                    </button>
+                    <button id="screenshots-tab" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm">
+                        📱 Multiple Screenshots
+                    </button>
+                </nav>
+            </div>
+
+            <!-- CSV Upload Section -->
+            <div id="csv-section" class="p-6">
+                <div class="space-y-4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-success to-cricket-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm font-bold">📊</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Step 2: Upload CSV File</h3>
+                            <p class="text-sm text-gray-600">
+                                Upload a CSV file with multiple teams. Format: TeamName, Players, Captain, ViceCaptain
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- CSV Template Download -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-blue-900">CSV Template</h4>
+                                <p class="text-sm text-blue-700">Download the template to see the required format</p>
+                            </div>
+                            <button id="download-template" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl text-sm hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-md">
+                                📥 Download Template
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CSV Upload Area -->
+                    <div id="csv-upload-area" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 cursor-pointer group">
+                        <input type="file" id="csv-input" accept=".csv" class="hidden">
+                        <div id="csv-upload-content">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-8 h-8 text-primary" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                            <p class="text-gray-700 mb-2 font-medium">Tap to upload CSV file</p>
+                            <p class="text-sm text-gray-500">CSV format with team data</p>
+                            <p class="text-xs text-gray-400 mt-2">📊 Multiple teams analysis</p>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="csv-loading" class="hidden">
+                            <div class="relative flex justify-center items-center mb-4" style="height: 64px; width: 64px;">
+                              <div class="absolute inset-0 animate-spin rounded-full border-4 border-primary/20 border-t-primary" style="animation-duration: 1s;"></div>
+                              <div class="absolute inset-0 animate-spin rounded-full border-4 border-secondary/20 border-t-secondary" style="animation-duration: 1.5s;"></div>
+                            </div>
+                            
+                            <!-- Status messages -->
+                            <div class="space-y-2 mb-6">
+                                <p class="text-primary font-semibold text-center">Processing CSV file...</p>
+                                <p class="text-sm text-gray-500 text-center">Extracting team data and validating format</p>
+                            </div>
+                            
+                            <!-- Processing steps indicator -->
+                            <div class="flex justify-center">
+                                <div class="flex space-x-4">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                                        <span class="text-xs text-gray-500 ml-1">Parse</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-secondary rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
+                                        <span class="text-xs text-gray-500 ml-1">Validate</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-success rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+                                        <span class="text-xs text-gray-500 ml-1">Process</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multiple Screenshots Section -->
+            <div id="screenshots-section" class="p-6 hidden">
+                <div class="space-y-4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm font-bold">📱</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Step 2: Upload Multiple Screenshots</h3>
+                            <p class="text-sm text-gray-600">
+                                Upload multiple Dream11 screenshots (up to 10) to analyze all teams at once
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Validation Requirement Notice -->
+                    <div id="validation-notice" class="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-white text-xs font-bold">⚠️</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-yellow-900">Match Validation Required</h4>
+                                <p class="text-sm text-yellow-700">Please validate the match details above before uploading screenshots</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Screenshots Upload Area -->
+                    <div id="screenshots-upload-area" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 cursor-pointer group opacity-50 pointer-events-none">
+                        <input type="file" id="screenshots-input" accept="image/*" multiple class="hidden">
+                        <div id="screenshots-upload-content">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-8 h-8 text-primary" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                            <p class="text-gray-700 mb-2 font-medium">Tap to upload screenshots</p>
+                            <p class="text-sm text-gray-500">Up to 10 Dream11 screenshots</p>
+                            <p class="text-xs text-gray-400 mt-2">📱 Multiple team analysis</p>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="screenshots-loading" class="hidden">
+                            <div class="relative flex justify-center items-center mb-4" style="height: 64px; width: 64px;">
+                              <div class="absolute inset-0 animate-spin rounded-full border-4 border-primary/20 border-t-primary" style="animation-duration: 1s;"></div>
+                              <div class="absolute inset-0 animate-spin rounded-full border-4 border-secondary/20 border-t-secondary" style="animation-duration: 1.5s;"></div>
+                            </div>
+                            
+                            <!-- Progress indicator -->
+                            <div class="mb-6">
+                                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                    <span id="screenshots-progress-text">Processing screenshots...</span>
+                                    <span id="screenshots-progress-count">0/0</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="screenshots-progress-bar" class="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Status messages -->
+                            <div class="space-y-2 mb-6">
+                                <p class="text-primary font-semibold text-center" id="screenshots-status-main">Initializing OCR processing...</p>
+                                <p class="text-sm text-gray-500 text-center" id="screenshots-status-sub">Extracting team data from screenshots</p>
+                            </div>
+                            
+                            <!-- Processing steps indicator -->
+                            <div class="flex justify-center">
+                                <div class="flex space-x-4">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                                        <span class="text-xs text-gray-500 ml-1">OCR</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-secondary rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
+                                        <span class="text-xs text-gray-500 ml-1">Extract</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-success rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+                                        <span class="text-xs text-gray-500 ml-1">Validate</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    <!-- Screenshots Preview -->
+                    <div id="screenshots-preview" class="hidden mt-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">Uploaded Screenshots</h4>
+                        <div id="screenshots-grid" class="grid grid-cols-2 gap-4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Teams Summary Section -->
+        <div id="teams-summary" class="hidden">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Teams Summary</h3>
+                    <div class="text-sm text-gray-500">
+                        <span id="teams-count">0</span> teams uploaded
+                    </div>
+                </div>
+                <div id="summary-content">
+                    <!-- Summary content will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Validation Section -->
+        <div id="player-validation-section" class="hidden">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Player Validation</h3>
+                    <button id="validate-all-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                        🔍 Validate All Players
+                    </button>
+                </div>
+                
+                <!-- Validation Loading -->
+                <div id="validation-loading" class="hidden">
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                            <div class="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+                        </div>
+                        <div class="text-lg font-medium text-gray-900 mb-2">Validating Players</div>
+                        <div class="text-sm text-gray-600">Checking all players against database...</div>
+                    </div>
+                </div>
+
+                <!-- Validation Results -->
+                <div id="validation-results">
+                    <!-- Validation results will be populated here -->
+                </div>
+
+                <!-- Validation Success -->
+                <div id="validation-success" class="hidden">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-green-800">All players validated successfully!</h3>
+                                    <div class="mt-2 text-sm text-green-700">
+                                        <p>Your teams are ready for analysis. You can now proceed with team comparison and analysis.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="bulkApp.displayFinalTeamSummary()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                Continue to Summary
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Selection Modal -->
+        <div id="player-selection-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Select Player</h3>
+                        <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="modal-subtitle" class="text-sm text-gray-600 mt-1">Select a player from the database</p>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <!-- Search and Filter -->
+                    <div class="space-y-3">
+                        <input type="text" id="player-search" placeholder="Search players..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <select id="team-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="">All Teams</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Players List -->
+                    <div id="modal-players-list" class="max-h-64 overflow-y-auto space-y-2">
+                        <!-- Players will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                    <button id="cancel-selection" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Enhanced Toast Messages -->
+    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-danger to-red-600 text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <span id="error-message" class="font-medium"></span>
+        </div>
+    </div>
+
+    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-success to-cricket-green text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <span id="success-message" class="font-medium"></span>
+        </div>
+    </div>
+
+    <!-- Load Component Scripts -->
+    <script src="js/utils/constants.js"></script>
+    <script src="js/components/Toast.js"></script>
+    <script src="js/components/MatchValidation.js"></script>
+    <script src="js/components/PlayerValidation.js"></script>
+    <script src="js/bulk-app.js"></script>
+</body>
+</html> 
