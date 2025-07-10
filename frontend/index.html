@@ -66,7 +66,7 @@
                         'xl': '0 16px 32px rgba(0, 0, 0, 0.16)'
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',   
                         'slide-up': 'slideUp 0.3s ease-out',
                         'bounce-subtle': 'bounceSubtle 2s infinite',
                     }
@@ -144,7 +144,7 @@
         <!-- Analysis Mode Selection -->
         <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4">
             <div class="grid grid-cols-2 gap-3">
-                <button class="bg-gradient-to-r from-primary to-primary-light text-white py-3 px-4 rounded-xl font-semibold shadow-md">
+                <button class="bg-primary text-white py-3 px-4 rounded-xl font-semibold shadow-md">
                     👤 Single Team
                 </button>
                 <button onclick="window.location.href='bulk-analysis.html'" class="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-900 transition-all duration-300 shadow-md">
@@ -173,9 +173,9 @@
 
                 <!-- VS Indicator -->
                 <div class="flex justify-center">
-                    <div class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full text-sm font-bold shadow-md">
-                        VS
-                    </div>
+                                    <div class="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold shadow-md" style="color: white !important;">
+                    VS
+                </div>
                 </div>
 
                 <!-- Team B -->
@@ -185,7 +185,6 @@
                         <option value="">Select Team B</option>
                     </select>
                 </div>
-
                 <!-- Match Date -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Match Date</label>
@@ -193,7 +192,7 @@
                 </div>
 
                 <!-- Validate Match Button -->
-                <button id="validate-match-btn" class="w-full bg-gradient-to-r from-primary to-primary-light text-white py-3 px-4 rounded-xl font-semibold hover:from-primary-light hover:to-secondary transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <button id="validate-match-btn" class="w-full bg-primary text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                     🔍 Validate Match
                 </button>
             </div>
@@ -304,13 +303,13 @@
 
             <!-- Action Buttons with Enhanced Styling -->
             <div class="space-y-3 mt-6">
-                <button id="analyze-btn" class="w-full bg-gradient-to-r from-cricket-green to-success text-white py-4 px-4 rounded-xl font-semibold hover:from-success hover:to-cricket-green transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <button id="analyze-btn" class="w-full bg-primary text-white py-4 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                     📊 Analyze Team Performance
                 </button>
                 
-                <button id="summary-btn" class="w-full bg-gradient-to-r from-secondary to-cricket-blue text-white py-4 px-4 rounded-xl font-semibold hover:from-cricket-blue hover:to-secondary transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <button id="summary-btn" class="w-full bg-primary text-white py-4 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                     ⭐ Get Team Summary & Rating
-            </button>
+                </button>
             </div>
         </section>
 
@@ -413,7 +412,7 @@
 
                 <!-- Summarize Button -->
                 <div class="text-center mt-6">
-                    <button id="summarize-btn" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-8 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    <button id="summarize-btn" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-green py-3 px-8 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" style="color: white !important;">
                         📋 Generate Team Summary
                     </button>
                 </div>
@@ -445,7 +444,7 @@
     </main>
 
     <!-- Enhanced Toast Messages -->
-    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-danger to-red-600 text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
+    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-red-600 text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
         <div class="flex items-center">
             <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -456,7 +455,7 @@
         </div>
     </div>
 
-    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-success to-cricket-green text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
+    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-green-600 text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
         <div class="flex items-center">
             <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

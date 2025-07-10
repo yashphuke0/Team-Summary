@@ -109,6 +109,32 @@ class CricketAnalyzerApp {
         if (summaryBtn) {
             summaryBtn.addEventListener('click', () => this.generateTeamSummary());
         }
+
+        // Player selection modal events
+        const closeModal = document.getElementById('close-modal');
+        const cancelSelection = document.getElementById('cancel-selection');
+        const playerSearch = document.getElementById('player-search');
+        const teamFilter = document.getElementById('team-filter');
+        
+        if (closeModal) closeModal.addEventListener('click', () => this.hidePlayerSelectionModal());
+        if (cancelSelection) cancelSelection.addEventListener('click', () => this.hidePlayerSelectionModal());
+        if (playerSearch) playerSearch.addEventListener('input', () => this.filterModalPlayers());
+        if (teamFilter) teamFilter.addEventListener('change', () => this.filterModalPlayers());
+        
+        // Close modal when clicking outside
+        const playerSelectionModal = document.getElementById('player-selection-modal');
+        if (playerSelectionModal) {
+            playerSelectionModal.addEventListener('click', (e) => {
+                if (e.target === playerSelectionModal) {
+                    this.hidePlayerSelectionModal();
+                }
+            });
+        }
+
+        // Set up global function for player validation component
+        window.showPlayerSelectionModal = (playerIndex, originalName) => {
+            this.showPlayerSelectionModal(playerIndex, originalName);
+        };
     }
 
     showUploadSection() {
@@ -194,17 +220,104 @@ class CricketAnalyzerApp {
         playerCountEl.textContent = `${validationResult.extractedPlayers || validationResult.totalPlayers}/11`;
         playersListDiv.innerHTML = '';
         
-        // Filter out validated and auto-corrected players
+        // Render all validation results (invalid, missing, etc.)
         validationResult.validationResults.forEach((player, index) => {
             if (!player.isValid && !player.autoReplaced) {
                 const playerDiv = document.createElement('div');
-                playerDiv.innerHTML = this.components.playerValidation.createPlayerCard(
-                    { player: player.inputName, validation: player }, 
-                    index
-                );
+                // If player is missing, show Add Player button
+                if (player.isMissing) {
+                    playerDiv.innerHTML = `
+                        <div class="p-3 bg-gray-100 border border-gray-300 rounded-lg border-dashed">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <span class="text-gray-400 mr-2">❌</span>
+                                    <div>
+                                        <span class="font-medium text-gray-600">Missing Player</span>
+                                        <div class="text-xs text-gray-500">Not extracted from screenshot</div>
+                                    </div>
+                                </div>
+                                <button class="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-primary/80 transition-colors player-select-btn"
+                                        data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="Missing Player">
+                                    Add Player
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // For unmatched, show suggestions and a Select from all button
+                    const suggestions = player.suggestions || [];
+                    const suggestionsHtml = suggestions.length > 0 ? `
+                        <div class="mt-3">
+                            <div class="text-xs text-gray-600 mb-2 font-medium">Suggested players:</div>
+                            <div class="space-y-1 max-h-32 overflow-y-auto">
+                                ${suggestions.map(suggestion => `
+                                    <button class="block w-full text-left p-2 bg-white border border-gray-200 rounded-lg text-xs hover:bg-gray-50 transition-colors player-suggestion-btn"
+                                            data-action="replacePlayer"
+                                            data-player-index="${index}"
+                                            data-player-name="${suggestion.playerName}"
+                                            data-player-id="${suggestion.playerId}"
+                                            data-player-role="${suggestion.role}"
+                                            data-player-team="${suggestion.team}">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <span class="font-medium text-gray-900">${suggestion.playerName}</span>
+                                                <div class="text-gray-500">${suggestion.role} • ${suggestion.team}</div>
+                                            </div>
+                                            <span class="text-warning font-bold">${Math.round(suggestion.similarity * 100)}%</span>
+                                        </div>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : '';
+                    playerDiv.innerHTML = `
+                        <div class="p-3 bg-warning/10 border border-warning/20 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <span class="text-warning mr-2">⚠️</span>
+                                    <div>
+                                        <span class="font-medium text-gray-900">${player.inputName}</span>
+                                        <div class="text-xs text-gray-500">Player not found</div>
+                                    </div>
+                                </div>
+                                <button class="text-xs bg-secondary text-white px-2 py-1 rounded hover:bg-secondary/80 transition-colors player-select-btn"
+                                        data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="${player.inputName}">
+                                    Select from all
+                                </button>
+                            </div>
+                            ${suggestionsHtml}
+                        </div>
+                    `;
+                }
                 playersListDiv.appendChild(playerDiv);
             }
         });
+
+        // If detected players < 11, add placeholder cards for each missing slot
+        const totalDetected = validationResult.validationResults.length;
+        if (totalDetected < 11) {
+            for (let i = totalDetected; i < 11; i++) {
+                const playerDiv = document.createElement('div');
+                playerDiv.innerHTML = `
+                    <div class="p-3 bg-gray-100 border border-gray-300 rounded-lg border-dashed">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="text-gray-400 mr-2">❌</span>
+                                <div>
+                                    <span class="font-medium text-gray-600">Missing Player</span>
+                                    <div class="text-xs text-gray-500">Not extracted from screenshot</div>
+                                </div>
+                            </div>
+                            <button class="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-primary/80 transition-colors player-select-btn"
+                                    data-action="showPlayerSelectionModal" data-player-index="${i}" data-player-name="Missing Player">
+                                Add Player
+                            </button>
+                        </div>
+                    </div>
+                `;
+                playersListDiv.appendChild(playerDiv);
+            }
+        }
         
         // Add delegated event listener for player select and suggestion buttons
         playersListDiv.removeEventListener('click', this._playerListClickHandler);
@@ -555,84 +668,8 @@ class CricketAnalyzerApp {
             </div>
         `;
     }
-
-    displaySummary(summary) {
-        document.getElementById('summary-text').innerHTML = summary;
-    }
-
-    showAnalysisLoading(show) {
-        const analysisContent = document.getElementById('analysis-content');
-        const analysisLoading = document.getElementById('analysis-loading');
-        
-        if (show) {
-            analysisContent.classList.add('hidden');
-            analysisLoading.classList.remove('hidden');
-        } else {
-            analysisContent.classList.remove('hidden');
-            analysisLoading.classList.add('hidden');
-        }
-    }
-
-    showSummaryLoading(show) {
-        const summaryContent = document.getElementById('summary-content');
-        const summaryLoading = document.getElementById('summary-loading');
-        
-        if (show) {
-            summaryContent.classList.add('hidden');
-            summaryLoading.classList.remove('hidden');
-        } else {
-            summaryContent.classList.remove('hidden');
-            summaryLoading.classList.add('hidden');
-        }
-    }
-
-    removeImage() {
-        this.currentFile = null;
-        this.extractedTeamData = null;
-        this.playerValidationResults = null;
-        
-        this.components.fileUpload.removeFile();
-        
-        const teamDataSection = document.getElementById('team-data');
-        const aiAnalysisSection = document.getElementById('ai-analysis');
-        const teamSummarySection = document.getElementById('team-summary');
-        
-        teamDataSection.classList.add('hidden');
-        aiAnalysisSection.classList.add('hidden');
-        teamSummarySection.classList.add('hidden');
-        
-        this.resetCaptainSelections();
-    }
-
-    resetCaptainSelections() {
-        const captainSelect = document.getElementById('captain-select');
-        const viceCaptainSelect = document.getElementById('vice-captain-select');
-        const captainNameEl = document.getElementById('captain-name');
-        const viceCaptainNameEl = document.getElementById('vice-captain-name');
-        
-        if (captainSelect) {
-            captainSelect.innerHTML = '<option value="">Choose Captain</option>';
-            viceCaptainSelect.innerHTML = '<option value="">Choose Vice-Captain</option>';
-            captainNameEl.textContent = 'Not selected';
-            viceCaptainNameEl.textContent = 'Not selected';
-        }
-    }
 }
 
-// Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     window.cricketAnalyzerApp = new CricketAnalyzerApp();
 });
-
-// Global functions for backward compatibility
-window.showError = function(message) {
-    if (window.cricketAnalyzerApp) {
-        window.cricketAnalyzerApp.components.toast.showError(message);
-    }
-};
-
-window.showSuccess = function(message) {
-    if (window.cricketAnalyzerApp) {
-        window.cricketAnalyzerApp.components.toast.showSuccess(message);
-    }
-}; 

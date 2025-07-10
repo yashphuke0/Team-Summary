@@ -164,7 +164,7 @@
                         </p>
                     </div>
                 </div>
-                <a href="index.html" class="bg-gradient-to-r from-primary to-primary-light text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:from-primary-light hover:to-secondary transition-all duration-300 shadow-md">
+                <a href="index.html" class="bg-primary text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-primary/90 transition-all duration-300 shadow-md" style="color: white !important;">
                     ← Single
                 </a>
             </div>
@@ -197,9 +197,9 @@
 
                 <!-- VS Indicator -->
                 <div class="flex justify-center">
-                    <div class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full text-sm font-bold shadow-md">
-                        VS
-                    </div>
+                                    <div class="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold shadow-md" style="color: white !important;">
+                    VS
+                </div>
                 </div>
 
                 <!-- Team B -->
@@ -217,7 +217,7 @@
                 </div>
 
                 <!-- Validate Match Button -->
-                <button id="validate-match-btn" class="w-full bg-gradient-to-r from-primary to-primary-light text-white py-3 px-4 rounded-xl font-semibold hover:from-primary-light hover:to-secondary transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <button id="validate-match-btn" class="w-full bg-primary text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" style="color: white !important;">
                     🔍 Validate Match
                 </button>
             </div>
@@ -427,7 +427,7 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-gray-900">Player Validation</h3>
-                    <button id="validate-all-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                    <button id="validate-all-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors" style="color: white !important;">
                         🔍 Validate All Players
                     </button>
                 </div>
@@ -515,10 +515,10 @@
     </main>
 
     <!-- Enhanced Toast Messages -->
-    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-danger to-red-600 text-white p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
-        <div class="flex items-center">
+    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-red-600 text-red p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50 border border-red-800">
+        <div class="flex items-center" style="background:rgba(0,0,0,0.12); border-radius:0.75rem;">
             <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                 </svg>
             </div>

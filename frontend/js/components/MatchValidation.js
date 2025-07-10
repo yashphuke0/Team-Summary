@@ -193,3 +193,15 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.MatchValidation = MatchValidation;
 } 
+
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('validate-match-btn');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      // Find the global app instance and call validateMatch if possible
+      if (window.cricketAnalyzerApp && window.cricketAnalyzerApp.components && window.cricketAnalyzerApp.components.matchValidation) {
+        window.cricketAnalyzerApp.components.matchValidation.validateMatch();
+      }
+    });
+  }
+}); 
