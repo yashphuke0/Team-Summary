@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Comparison Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">🏆 Team Comparison Test</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Test Data</h2>
+            <button id="test-btn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                Test Team Comparison
+            </button>
+        </div>
+
+        <div id="results" class="bg-white rounded-lg shadow p-6 hidden">
+            <h2 class="text-lg font-semibold mb-4">Comparison Results</h2>
+            <div id="loading" class="text-center py-8 hidden">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <p class="text-purple-600 font-medium">Comparing teams...</p>
+            </div>
+            <div id="content" class="hidden">
+                <div id="recommendation" class="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200 mb-6">
+                    <h3 class="font-semibold text-purple-900 mb-2">🤖 AI Recommendation</h3>
+                    <div id="recommendation-text"></div>
+                </div>
+                
+                <div id="comparison-table" class="mb-6">
+                    <h3 class="font-semibold text-gray-900 mb-2">📊 Team Comparison</h3>
+                    <div id="table-content"></div>
+                </div>
+                
+                <div id="match-context" class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-gray-900 mb-2">📈 Match Context</h3>
+                    <div id="context-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/api';
+        
+        // Test data - 2 teams for comparison
+        const testTeams = [
+            {
+                teamId: 1,
+                teamName: "Team Alpha",
+                players: ["Virat Kohli", "Rohit Sharma", "MS Dhoni", "Jasprit Bumrah", "Ravindra Jadeja", "Hardik Pandya", "KL Rahul", "Yuzvendra Chahal", "Andre Russell", "Jos Buttler", "Rashid Khan"],
+                captain: "Virat Kohli",
+                vice_captain: "Rohit Sharma"
+            },
+            {
+                teamId: 2,
+                teamName: "Team Beta", 
+                players: ["Rohit Sharma", "Virat Kohli", "MS Dhoni", "Jasprit Bumrah", "Ravindra Jadeja", "Hardik Pandya", "KL Rahul", "Yuzvendra Chahal", "Andre Russell", "Jos Buttler", "Rashid Khan"],
+                captain: "Rohit Sharma",
+                vice_captain: "Virat Kohli"
+            }
+        ];
+
+        const testMatchDetails = {
+            teamA: "Royal Challengers Bengaluru",
+            teamB: "Lucknow Super Giants", 
+            matchDate: "2025-07-08"
+        };
+
+        document.getElementById('test-btn').addEventListener('click', async () => {
+            const results = document.getElementById('results');
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            
+            results.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/compare-teams`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        teams: testTeams,
+                        matchDetails: testMatchDetails
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResults(result);
+                } else {
+                    document.getElementById('recommendation-text').innerHTML = 
+                        `<div class="text-red-600">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Comparison error:', error);
+                document.getElementById('recommendation-text').innerHTML = 
+                    `<div class="text-red-600">Error: ${error.message}</div>`;
+            } finally {
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            }
+        });
+
+        function displayResults(result) {
+            // Display AI recommendation
+            document.getElementById('recommendation-text').innerHTML = result.comparison;
+
+            // Display team comparison table
+            const tableHTML = `
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Captain</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vice-Captain</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Composition</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${result.teamData.map(team => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    ${team.teamName}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-yellow-600 font-medium">
+                                    ${team.captain || 'Not selected'}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                                    ${team.vice_captain || 'Not selected'}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-500">
+                                    ${team.composition.batsmen}B ${team.composition.bowlers}W ${team.composition.allRounders}AR ${team.composition.wicketKeepers}WK
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('table-content').innerHTML = tableHTML;
+
+            // Display match context
+            const contextHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div class="bg-blue-50 p-3 rounded">
+                        <div class="font-medium text-blue-900 mb-1">Team Form</div>
+                        <div class="text-blue-700">${result.matchContext.teamForm || 'Not available'}</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded">
+                        <div class="font-medium text-green-900 mb-1">Head-to-Head</div>
+                        <div class="text-green-700">${result.matchContext.headToHead || 'Not available'}</div>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded">
+                        <div class="font-medium text-purple-900 mb-1">Venue Stats</div>
+                        <div class="text-purple-700">${result.matchContext.venueStats || 'Not available'}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('context-content').innerHTML = contextHTML;
+        }
+    </script>
+</body>
+</html> 
