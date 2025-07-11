@@ -101,7 +101,7 @@ class CricketAnalyzerApp {
 
         // Action buttons
         const analyzeBtn = document.getElementById('analyze-btn');
-        const summaryBtn = document.getElementById('summary-btn');
+        const summaryBtn = document.getElementById('summarize-btn'); // FIXED: was 'summary-btn'
         
         if (analyzeBtn) {
             analyzeBtn.addEventListener('click', () => this.analyzeTeam());
@@ -220,77 +220,97 @@ class CricketAnalyzerApp {
         playerCountEl.textContent = `${validationResult.extractedPlayers || validationResult.totalPlayers}/11`;
         playersListDiv.innerHTML = '';
         
-        // Render all validation results (invalid, missing, etc.)
+        // Render all validation results (valid, invalid, missing, etc.)
         validationResult.validationResults.forEach((player, index) => {
-            if (!player.isValid && !player.autoReplaced) {
-                const playerDiv = document.createElement('div');
-                // If player is missing, show Add Player button
-                if (player.isMissing) {
-                    playerDiv.innerHTML = `
-                        <div class="p-3 bg-gray-100 border border-gray-300 rounded-lg border-dashed">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <span class="text-gray-400 mr-2">❌</span>
-                                    <div>
-                                        <span class="font-medium text-gray-600">Missing Player</span>
-                                        <div class="text-xs text-gray-500">Not extracted from screenshot</div>
-                                    </div>
-                                </div>
-                                <button class="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-primary/80 transition-colors player-select-btn"
-                                        data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="Missing Player">
-                                    Add Player
-                                </button>
+            const playerDiv = document.createElement('div');
+            
+            if (player.isValid) {
+                // Valid player (including auto-corrected)
+                const isAutoReplaced = player.autoReplaced;
+                const bgColor = isAutoReplaced ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-200';
+                const iconColor = isAutoReplaced ? 'text-blue-600' : 'text-green-600';
+                const icon = isAutoReplaced ? '🔄' : '✅';
+                const statusText = isAutoReplaced ? `${Math.round(player.confidence * 100)}% match` : 'Validated';
+                
+                playerDiv.innerHTML = `
+                    <div class="flex items-center justify-between p-3 ${bgColor} border rounded-lg">
+                        <div class="flex items-center">
+                            <span class="${iconColor} mr-2">${icon}</span>
+                            <div>
+                                <span class="font-medium text-gray-900">${player.validatedName}</span>
+                                <div class="text-xs text-gray-500">${player.role} • ${player.team}</div>
+                                ${isAutoReplaced ? `<div class="text-xs ${iconColor} italic">Auto-corrected from "${player.inputName}"</div>` : ''}
                             </div>
                         </div>
-                    `;
-                } else {
-                    // For unmatched, show suggestions and a Select from all button
-                    const suggestions = player.suggestions || [];
-                    const suggestionsHtml = suggestions.length > 0 ? `
-                        <div class="mt-3">
-                            <div class="text-xs text-gray-600 mb-2 font-medium">Suggested players:</div>
-                            <div class="space-y-1 max-h-32 overflow-y-auto">
-                                ${suggestions.map(suggestion => `
-                                    <button class="block w-full text-left p-2 bg-white border border-gray-200 rounded-lg text-xs hover:bg-gray-50 transition-colors player-suggestion-btn"
-                                            data-action="replacePlayer"
-                                            data-player-index="${index}"
-                                            data-player-name="${suggestion.playerName}"
-                                            data-player-id="${suggestion.playerId}"
-                                            data-player-role="${suggestion.role}"
-                                            data-player-team="${suggestion.team}">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <span class="font-medium text-gray-900">${suggestion.playerName}</span>
-                                                <div class="text-gray-500">${suggestion.role} • ${suggestion.team}</div>
-                                            </div>
-                                            <span class="text-warning font-bold">${Math.round(suggestion.similarity * 100)}%</span>
+                        <div class="text-xs ${iconColor} font-medium">${statusText}</div>
+                    </div>
+                `;
+            } else if (player.isMissing) {
+                // Missing player
+                playerDiv.innerHTML = `
+                    <div class="p-3 bg-gray-100 border border-gray-300 rounded-lg border-dashed">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="text-gray-400 mr-2">❌</span>
+                                <div>
+                                    <span class="font-medium text-gray-600">Missing Player</span>
+                                    <div class="text-xs text-gray-500">Not extracted from screenshot</div>
+                                </div>
+                            </div>
+                            <button class="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-primary/80 transition-colors player-select-btn"
+                                    data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="Missing Player">
+                                Add Player
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Invalid player with suggestions
+                const suggestions = player.suggestions || [];
+                const suggestionsHtml = suggestions.length > 0 ? `
+                    <div class="mt-3">
+                        <div class="text-xs text-gray-600 mb-2 font-medium">Suggested players:</div>
+                        <div class="space-y-1 max-h-32 overflow-y-auto">
+                            ${suggestions.map(suggestion => `
+                                <button class="block w-full text-left p-2 bg-white border border-gray-200 rounded-lg text-xs hover:bg-gray-50 transition-colors player-suggestion-btn"
+                                        data-action="replacePlayer"
+                                        data-player-index="${index}"
+                                        data-player-name="${suggestion.playerName}"
+                                        data-player-id="${suggestion.playerId}"
+                                        data-player-role="${suggestion.role}"
+                                        data-player-team="${suggestion.team}">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="font-medium text-gray-900">${suggestion.playerName}</span>
+                                            <div class="text-gray-500">${suggestion.role} • ${suggestion.team}</div>
                                         </div>
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : '';
-                    playerDiv.innerHTML = `
-                        <div class="p-3 bg-warning/10 border border-warning/20 rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <span class="text-warning mr-2">⚠️</span>
-                                    <div>
-                                        <span class="font-medium text-gray-900">${player.inputName}</span>
-                                        <div class="text-xs text-gray-500">Player not found</div>
+                                        <span class="text-warning font-bold">${Math.round(suggestion.similarity * 100)}%</span>
                                     </div>
-                                </div>
-                                <button class="text-xs bg-secondary text-white px-2 py-1 rounded hover:bg-secondary/80 transition-colors player-select-btn"
-                                        data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="${player.inputName}">
-                                    Select from all
                                 </button>
-                            </div>
-                            ${suggestionsHtml}
+                            `).join('')}
                         </div>
-                    `;
-                }
-                playersListDiv.appendChild(playerDiv);
+                    </div>
+                ` : '';
+                playerDiv.innerHTML = `
+                    <div class="p-3 bg-warning/10 border border-warning/20 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="text-warning mr-2">⚠️</span>
+                                <div>
+                                    <span class="font-medium text-gray-900">${player.inputName}</span>
+                                    <div class="text-xs text-gray-500">Player not found</div>
+                                </div>
+                            </div>
+                            <button class="text-xs bg-blue-400 text-gray-900 px-2 py-1 rounded hover:bg-yellow-500 transition-colors player-select-btn"
+                                    data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="${player.inputName}">
+                                Select from all
+                            </button>
+                        </div>
+                        ${suggestionsHtml}
+                    </div>
+                `;
             }
+            playersListDiv.appendChild(playerDiv);
         });
 
         // If detected players < 11, add placeholder cards for each missing slot
@@ -324,9 +344,12 @@ class CricketAnalyzerApp {
         this._playerListClickHandler = (event) => {
             const target = event.target.closest('button');
             if (!target) return;
+            
             const action = target.getAttribute('data-action');
             if (!action) return;
+            
             const playerIndex = parseInt(target.getAttribute('data-player-index'), 10);
+            
             if (action === 'replacePlayer') {
                 const name = target.getAttribute('data-player-name');
                 const id = target.getAttribute('data-player-id');
@@ -361,6 +384,18 @@ class CricketAnalyzerApp {
             
             this.components.toast.showError(summaryMessage + '. Complete your team to continue.');
         }
+
+        // After rendering, attach Add Player button event
+        setTimeout(() => {
+            const addPlayerBtn = document.querySelector('.add-player-btn');
+            if (addPlayerBtn) {
+                addPlayerBtn.addEventListener('click', () => {
+                    // Find the missing player index (first missing)
+                    const missingIndex = this.extractedTeamData.players.findIndex(p => !p);
+                    this.showPlayerSelectionModal(missingIndex, '');
+                });
+            }
+        }, 0);
     }
 
     displayTeamData(data) {
@@ -475,7 +510,7 @@ class CricketAnalyzerApp {
         const captainSelect = document.getElementById('captain-select');
         const viceCaptainSelect = document.getElementById('vice-captain-select');
         const analyzeBtn = document.getElementById('analyze-btn');
-        const summaryBtn = document.getElementById('summary-btn');
+        const summaryBtn = document.getElementById('summarize-btn'); // FIXED: was 'summary-btn'
         
         const captain = captainSelect.value;
         const viceCaptain = viceCaptainSelect.value;
@@ -610,6 +645,18 @@ class CricketAnalyzerApp {
         }
     }
 
+    showSummaryLoading(show) {
+        const summaryLoading = document.getElementById('summary-loading');
+        const summaryContent = document.getElementById('summary-content');
+        if (show) {
+            if (summaryLoading) summaryLoading.classList.remove('hidden');
+            if (summaryContent) summaryContent.classList.add('hidden');
+        } else {
+            if (summaryLoading) summaryLoading.classList.add('hidden');
+            if (summaryContent) summaryContent.classList.remove('hidden');
+        }
+    }
+
     displayTeamBalance(validatedPlayers) {
         const teamBalanceEl = document.getElementById('team-balance-content');
         
@@ -679,6 +726,175 @@ class CricketAnalyzerApp {
                 ` : ''}
             </div>
         `;
+    }
+
+    displaySummary(summary) {
+        const summaryContent = document.getElementById('summary-content');
+        const summaryText = document.getElementById('summary-text');
+        
+        // Format the summary text for better mobile display
+        const formattedSummary = summary
+            .replace(/\n\n/g, '</p><p class="mb-3">') // Replace double line breaks with paragraph breaks
+            .replace(/\n/g, '<br>') // Replace single line breaks with <br>
+            .replace(/•/g, '• ') // Ensure bullet points have space
+            .replace(/(\d+\.\s*[🧠🎯🏟️🔍💡])/g, '<strong class="text-lg font-bold text-gray-900">$1</strong>') // Make section headers bold
+            .replace(/([🧠🎯🏟️🔍💡])/g, '<span class="text-xl">$1</span>'); // Make emojis larger
+        
+        summaryText.innerHTML = `
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                <div class="prose prose-sm max-w-none">
+                    <p class="mb-3 text-gray-800 leading-relaxed">${formattedSummary}</p>
+                </div>
+            </div>
+        `;
+        
+        summaryContent.classList.remove('hidden');
+    }
+
+    async showPlayerSelectionModal(playerIndex, originalName) {
+        
+        // Store playerIndex and originalName for filtering
+        this._lastPlayerIndex = playerIndex;
+        this._lastOriginalName = originalName;
+
+        // Get modal elements
+        const modal = document.getElementById('player-selection-modal');
+        const playersListDiv = document.getElementById('modal-players-list');
+        const modalSubtitle = document.getElementById('modal-subtitle');
+        const playerSearch = document.getElementById('player-search');
+        const teamFilter = document.getElementById('team-filter');
+
+        // Get selected teams
+        const matchDetails = this.components.matchValidation.getCurrentMatchDetails();
+        if (!matchDetails) {
+            this.components.toast.showError('Please select teams and validate match first.');
+            return;
+        }
+        const { teamA, teamB, matchDate } = matchDetails;
+        
+
+        // Show loading state in modal
+        playersListDiv.innerHTML = '<div class="text-gray-500 text-center py-2">Loading players...</div>';
+        if (modalSubtitle) modalSubtitle.textContent = `Loading players from ${teamA} and ${teamB}...`;
+        modal.classList.remove('hidden');
+
+        // Fetch eligible players from backend
+        let eligiblePlayers = [];
+        try {
+            const response = await fetch(`${CONSTANTS.API_BASE_URL}/eligible-players`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teamA, teamB, matchDate })
+            });
+            const result = await response.json();
+            
+            if (result.success && Array.isArray(result.players)) {
+                eligiblePlayers = result.players;
+                this._lastEligiblePlayers = eligiblePlayers; // Store for filtering
+            } else {
+                playersListDiv.innerHTML = '<div class="text-red-500 text-center py-2">No players found.</div>';
+                return;
+            }
+        } catch (err) {
+            console.error('Error fetching eligible players:', err);
+            playersListDiv.innerHTML = '<div class="text-red-500 text-center py-2">Failed to load players.</div>';
+            return;
+        }
+
+        // Render player list
+        const renderPlayersList = (list) => {
+            playersListDiv.innerHTML = '';
+            if (!list.length) {
+                playersListDiv.innerHTML = '<div class="text-gray-500 text-center py-2">No players found</div>';
+                return;
+            }
+            list.forEach((player) => {
+                const div = document.createElement('div');
+                div.className = 'cursor-pointer p-2 rounded hover:bg-blue-100 flex items-center justify-between';
+                div.innerHTML = `<span>${player.player_name}</span><span class='text-xs text-gray-400'>${player.team_name}</span>`;
+                div.addEventListener('click', () => {
+                    // Replace missing player and re-validate
+                    this.extractedTeamData.players[playerIndex] = player.player_name;
+                    modal.classList.add('hidden');
+                    this.validatePlayers(this.extractedTeamData.players);
+                    this.components.toast.showSuccess(`Added ${player.player_name}`);
+                });
+                playersListDiv.appendChild(div);
+            });
+        };
+        renderPlayersList(eligiblePlayers);
+
+        // Set up search
+        if (playerSearch) {
+            playerSearch.value = '';
+            playerSearch.oninput = (e) => {
+                const val = e.target.value.toLowerCase();
+                const searched = eligiblePlayers.filter(p => p.player_name.toLowerCase().includes(val));
+                renderPlayersList(searched);
+            };
+        }
+
+        // Set up team filter
+        if (teamFilter) {
+            teamFilter.innerHTML = `<option value=''>All Teams</option><option value='${teamA}'>${teamA}</option><option value='${teamB}'>${teamB}</option>`;
+            teamFilter.value = '';
+            teamFilter.onchange = (e) => {
+                const val = e.target.value;
+                const filtered = val ? eligiblePlayers.filter(p => p.team_name === val) : eligiblePlayers;
+                renderPlayersList(filtered);
+            };
+        }
+
+        // Set subtitle
+        if (modalSubtitle) {
+            modalSubtitle.textContent = `Choose from ${teamA} or ${teamB}`;
+        }
+    }
+
+    // Filter players in the modal based on search and team filter
+    filterModalPlayers() {
+        const playersListDiv = document.getElementById('modal-players-list');
+        const playerSearch = document.getElementById('player-search');
+        const teamFilter = document.getElementById('team-filter');
+        
+        // Get eligible players from the last modal open (store on this object)
+        const eligiblePlayers = this._lastEligiblePlayers || [];
+        let filtered = eligiblePlayers;
+        
+        // Filter by search
+        if (playerSearch && playerSearch.value) {
+            const val = playerSearch.value.toLowerCase();
+            filtered = filtered.filter(p => p.player_name.toLowerCase().includes(val));
+        }
+        // Filter by team
+        if (teamFilter && teamFilter.value) {
+            filtered = filtered.filter(p => p.team_name === teamFilter.value);
+        }
+        // Render
+        playersListDiv.innerHTML = '';
+        if (!filtered.length) {
+            playersListDiv.innerHTML = '<div class="text-gray-500 text-center py-2">No players found</div>';
+            return;
+        }
+        filtered.forEach((player) => {
+            const div = document.createElement('div');
+            div.className = 'cursor-pointer p-2 rounded hover:bg-blue-100 flex items-center justify-between';
+            div.innerHTML = `<span>${player.player_name}</span><span class='text-xs text-gray-400'>${player.team_name}</span>`;
+            div.addEventListener('click', () => {
+                this.extractedTeamData.players[this._lastPlayerIndex] = player.player_name;
+                const modal = document.getElementById('player-selection-modal');
+                if (modal) modal.classList.add('hidden');
+                this.validatePlayers(this.extractedTeamData.players);
+                this.components.toast.showSuccess(`Added ${player.player_name}`);
+            });
+            playersListDiv.appendChild(div);
+        });
+    }
+
+    // Hide the player selection modal
+    hidePlayerSelectionModal() {
+        const modal = document.getElementById('player-selection-modal');
+        if (modal) modal.classList.add('hidden');
     }
 }
 

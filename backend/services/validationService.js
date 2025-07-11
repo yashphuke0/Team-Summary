@@ -1,5 +1,40 @@
 const supabase = require('./supabaseClient');
 
+// Helper: Get recent players for a team from their last 10 matches
+async function getRecentPlayersForTeam(teamId, matchLimit = 10) {
+    // Step 1: Get recent match IDs
+    const { data: matches, error: matchError } = await supabase
+        .from('matches')
+        .select('match_id')
+        .or(`team1_id.eq.${teamId},team2_id.eq.${teamId}`)
+        .order('match_date', { ascending: false })
+        .limit(matchLimit);
+    if (matchError || !matches || matches.length === 0) return [];
+    const matchIds = matches.map(m => m.match_id);
+    // Step 2: Get players from those matches
+    const { data: playerRows, error: playerError } = await supabase
+        .from('player_match_stats')
+        .select('player_id, team_id, players!inner(player_name, role, is_active)')
+        .in('match_id', matchIds)
+        .eq('team_id', teamId);
+    if (playerError || !playerRows) return [];
+    // Only unique players
+    const seen = new Set();
+    const uniquePlayers = [];
+    for (const row of playerRows) {
+        if (!seen.has(row.player_id)) {
+            seen.add(row.player_id);
+            uniquePlayers.push({
+                player_id: row.player_id,
+                player_name: row.players.player_name,
+                role: row.players.role,
+                team_id: row.team_id
+            });
+        }
+    }
+    return uniquePlayers;
+}
+
 async function validateMatch({ teamA, teamB, matchDate }) {
     if (!teamA || !teamB || !matchDate) {
         return {
@@ -69,12 +104,16 @@ async function validatePlayers({ players, teamA, teamB }) {
             message: 'Team A and Team B are required for player validation'
         };
     }
+    // Debug: Log input teams
+    console.log('VALIDATE: teamA =', teamA, ', teamB =', teamB);
     // Get team data
     const { data: teams, error: teamsError } = await supabase
         .from('teams')
         .select('team_id, team_name')
         .in('team_name', [teamA, teamB]);
     if (teamsError) throw teamsError;
+    // Debug: Log fetched teams
+    console.log('VALIDATE: fetched teams =', teams.map(t => `${t.team_name} (ID: ${t.team_id})`).join(', '));
     if (teams.length < 2) {
         return {
             success: false,
@@ -82,7 +121,9 @@ async function validatePlayers({ players, teamA, teamB }) {
         };
     }
     const teamIds = teams.map(t => t.team_id);
-    // Get active players for selected teams
+    // Debug: Log team IDs
+    console.log('VALIDATE: team IDs =', teamIds);
+    // Get active players for selected teams (full pool for validation)
     const { data: playerMatchData, error: matchStatsError } = await supabase
         .from('player_match_stats')
         .select(`
@@ -93,6 +134,11 @@ async function validatePlayers({ players, teamA, teamB }) {
         .in('team_id', teamIds)
         .eq('players.is_active', true);
     if (matchStatsError) throw matchStatsError;
+    // Debug: Log number of players fetched and a sample
+    console.log('VALIDATE: fetched', playerMatchData.length, 'player records');
+    if (playerMatchData.length > 0) {
+        console.log('VALIDATE: sample players:', playerMatchData.slice(0, 10).map(p => `${p.players.player_name} (${p.team_id})`).join(', '));
+    }
     // Process to get unique players with their most frequent team
     const playerTeamCounts = {};
     playerMatchData.forEach(record => {
@@ -128,6 +174,11 @@ async function validatePlayers({ players, teamA, teamB }) {
             match_count: teamCounts[mostFrequentTeamId]
         };
     });
+    // Fetch recent players for each team for suggestions
+    const recentPlayersByTeam = {};
+    for (const t of teams) {
+        recentPlayersByTeam[t.team_id] = await getRecentPlayersForTeam(t.team_id, 10);
+    }
     // Validate each player and provide suggestions
     const processedPlayers = players;
     const validationResults = processedPlayers.map(playerName => {
@@ -160,35 +211,43 @@ async function validatePlayers({ players, teamA, teamB }) {
                 confidence: 1.0
             };
         }
-        // Fuzzy match - find similar names
-        const suggestions = playersWithTeams
-            .map(p => ({
-                ...p,
-                similarity: calculateSimilarity(trimmedName.toLowerCase(), p.player_name.toLowerCase())
-            }))
-            .filter(p => p.similarity > 0.3)
-            .sort((a, b) => b.similarity - a.similarity)
-            .slice(0, 5);
-        // Auto-replace if high confidence match (80%+ similarity)
-        if (suggestions.length > 0 && suggestions[0].similarity >= 0.8) {
+        // Fuzzy match - use only recent players for suggestions
+        let suggestions = [];
+        for (const t of teams) {
+            const recentPlayers = recentPlayersByTeam[t.team_id] || [];
+            const teamSuggestions = recentPlayers
+                .map(p => ({
+                    ...p,
+                    similarity: calculateSimilarity(trimmedName.toLowerCase(), p.player_name.toLowerCase())
+                }))
+                .filter(p => p.similarity > 0.3);
+            suggestions = suggestions.concat(teamSuggestions);
+        }
+        
+        // Sort all suggestions by similarity (highest first)
+        suggestions.sort((a, b) => b.similarity - a.similarity);
+        
+        // Auto-replace if high confidence match (85%+ similarity)
+        if (suggestions.length > 0 && suggestions[0].similarity >= 0.85) {
             const bestMatch = suggestions[0];
             return {
                 inputName: playerName,
                 validatedName: bestMatch.player_name,
                 playerId: bestMatch.player_id,
                 role: bestMatch.role,
-                team: bestMatch.team_name,
+                team: teams.find(t => t.team_id === bestMatch.team_id)?.team_name || null,
                 isValid: true,
                 confidence: bestMatch.similarity,
                 autoReplaced: true
             };
         }
-        // Convert suggestions to format expected by frontend
-        const formattedSuggestions = suggestions.map(p => ({
+        
+        // Convert suggestions to format expected by frontend (already sorted by similarity)
+        const formattedSuggestions = suggestions.slice(0, 5).map(p => ({
             playerId: p.player_id,
             playerName: p.player_name,
             role: p.role,
-            team: p.team_name,
+            team: teams.find(t => t.team_id === p.team_id)?.team_name || null,
             similarity: p.similarity
         }));
         return {

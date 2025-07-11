@@ -90,12 +90,34 @@ class TeamAnalysis {
 
     async generateTeamSummary(teamData) {
         try {
+            // Fetch all analysis data in parallel
+            const [teamFormData, headToHeadData, playerPerformanceData, venueStatsData] = await Promise.all([
+                this.fetchTeamRecentForm(teamData),
+                this.fetchHeadToHead(teamData),
+                this.fetchPlayerPerformance(teamData),
+                this.fetchVenueStats(teamData)
+            ]);
+
+            // Prepare summary data with all statistical information
+            const summaryData = {
+                teamA: teamData.teamA,
+                teamB: teamData.teamB,
+                matchDate: teamData.matchDate,
+                players: teamData.players,
+                captain: teamData.captain,
+                viceCaptain: teamData.viceCaptain,
+                teamFormData: teamFormData,
+                headToHeadData: headToHeadData,
+                playerPerformanceData: playerPerformanceData,
+                venueStatsData: venueStatsData
+            };
+
             const response = await fetch(`${this.apiBaseUrl}/team-summary`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(teamData)
+                body: JSON.stringify(summaryData)
             });
 
             const result = await response.json();

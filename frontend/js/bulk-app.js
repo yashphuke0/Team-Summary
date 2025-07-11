@@ -128,6 +128,12 @@ class BulkCricketAnalyzerApp {
                 }
             });
         }
+
+        // Summary button event
+        const summaryBtn = document.getElementById('summary-btn');
+        if (summaryBtn) {
+            summaryBtn.addEventListener('click', () => this.showSummary());
+        }
     }
 
     switchTab(tabName) {
@@ -707,7 +713,7 @@ class BulkCricketAnalyzerApp {
                                 <div class="text-xs text-gray-500">Player not found</div>
                             </div>
                         </div>
-                        <button onclick="bulkApp.showCustomNameInput(${globalIndex})" class="text-xs bg-secondary text-white px-2 py-1 rounded hover:bg-secondary/80 transition-colors">
+                        <button onclick="bulkApp.showCustomNameInput(${globalIndex})" class="text-xs bg-yellow-500 text-gray-900 px-2 py-1 rounded border border-gray-300 hover:bg-yellow-600 transition-colors">
                             Select
                         </button>
                     </div>
@@ -1107,6 +1113,50 @@ Team 2,"Rohit Sharma, Virat Kohli, MS Dhoni, Jasprit Bumrah, Ravindra Jadeja, Ha
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+    }
+
+    async showSummary() {
+        if (!this.currentTeams || this.currentTeams.length === 0) {
+            this.components.toast.showError('No teams to summarize.');
+            return;
+        }
+
+        if (!this.components.matchValidation.isMatchValidated()) {
+            this.components.toast.showError('Please validate the match details (teams and date) before summarizing.');
+            return;
+        }
+
+        try {
+            this.showValidationLoading(true);
+            const matchDetails = this.components.matchValidation.getCurrentMatchDetails();
+
+            const summaryData = {
+                teams: this.currentTeams,
+                matchDetails: matchDetails
+            };
+
+            const response = await fetch(`${CONSTANTS.API_BASE_URL}/summary/bulk`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(summaryData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.displayTeamsSummary(result.data);
+                this.components.toast.showSuccess(`✅ Summary generated for ${result.data.totalTeams} teams!`);
+            } else {
+                this.components.toast.showError(result.message || 'Failed to generate summary.');
+            }
+        } catch (error) {
+            console.error('Summary error:', error);
+            this.components.toast.showError('Failed to generate summary. Please try again.');
+        } finally {
+            this.showValidationLoading(false);
+        }
     }
 }
 
