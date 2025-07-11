@@ -598,6 +598,18 @@ class CricketAnalyzerApp {
         document.getElementById('analysis-content').classList.remove('hidden');
     }
 
+    showAnalysisLoading(show) {
+        const analysisContent = document.getElementById('analysis-content');
+        const analysisLoading = document.getElementById('analysis-loading');
+        if (show) {
+            analysisContent.classList.add('hidden');
+            analysisLoading.classList.remove('hidden');
+        } else {
+            analysisContent.classList.remove('hidden');
+            analysisLoading.classList.add('hidden');
+        }
+    }
+
     displayTeamBalance(validatedPlayers) {
         const teamBalanceEl = document.getElementById('team-balance-content');
         
