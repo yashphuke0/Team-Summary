@@ -125,37 +125,28 @@ class PlayerValidation {
         if (validation.isValid) {
             const isAutoReplaced = validation.autoReplaced;
             const bgColor = isAutoReplaced ? 'bg-blue-50 border-blue-200' : 'bg-success/10 border-success/20';
-            const iconColor = isAutoReplaced ? 'text-blue-600' : 'text-success';
-            const icon = isAutoReplaced ? '🔄' : '✅';
-            const statusText = isAutoReplaced ? `${Math.round(validation.confidence * 100)}% match` : 'Validated';
+            const textColor = isAutoReplaced ? 'text-blue-600' : 'text-success';
             
             return `
                 <div class="flex items-center justify-between p-3 ${bgColor} border rounded-lg">
-                    <div class="flex items-center">
-                        <span class="${iconColor} mr-2">${icon}</span>
-                        <div>
-                            <span class="font-medium text-gray-900">${validation.validatedName}</span>
-                            <div class="text-xs text-gray-500">${validation.role} • ${validation.team}</div>
-                            ${isAutoReplaced ? `<div class="text-xs ${iconColor} italic">Auto-corrected from "${validation.inputName}"</div>` : ''}
-                        </div>
+                    <div>
+                        <span class="font-medium text-gray-900">${validation.validatedName}</span>
+                        <div class="text-xs text-gray-500">${validation.role} • ${validation.team}</div>
                     </div>
-                    <div class="text-xs ${iconColor} font-medium">${statusText}</div>
+                    <div class="text-xs ${textColor} font-medium">${isAutoReplaced ? 'Auto-corrected' : 'Valid'}</div>
                 </div>
             `;
         } else if (validation.isMissing) {
             return `
                 <div class="p-3 bg-gray-100 border border-gray-300 rounded-lg border-dashed">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <span class="text-gray-400 mr-2">❌</span>
-                            <div>
-                                <span class="font-medium text-gray-600">${validation.inputName}</span>
-                                <div class="text-xs text-gray-500">Not extracted from screenshot</div>
-                            </div>
+                        <div>
+                            <span class="font-medium text-gray-600">${validation.inputName}</span>
+                            <div class="text-xs text-gray-500">Missing</div>
                         </div>
                         <button class="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-primary/80 transition-colors player-select-btn"
                                 data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="${validation.inputName}">
-                            Add Player
+                            Add
                         </button>
                     </div>
                 </div>
@@ -163,11 +154,11 @@ class PlayerValidation {
         } else {
             const hasSuggestions = validation.suggestions && validation.suggestions.length > 0;
             const suggestionsHtml = hasSuggestions ? `
-                <div class="mt-3">
-                    <div class="text-xs text-gray-600 mb-2 font-medium">Suggested players:</div>
-                    <div class="space-y-1 max-h-32 overflow-y-auto">
+                <div class="mt-2">
+                    <div class="text-xs text-gray-600 mb-1">Suggestions:</div>
+                    <div class="space-y-1 max-h-24 overflow-y-auto">
                         ${validation.suggestions.map(suggestion => `
-                            <button class="block w-full text-left p-2 bg-white border border-gray-200 rounded-lg text-xs hover:bg-gray-50 transition-colors player-suggestion-btn"
+                            <button class="block w-full text-left p-2 bg-white border border-gray-200 rounded text-xs hover:bg-gray-50 transition-colors player-suggestion-btn"
                                     data-action="replacePlayer"
                                     data-player-index="${index}"
                                     data-player-name="${suggestion.playerName}"
@@ -190,12 +181,9 @@ class PlayerValidation {
             return `
                 <div class="p-3 bg-warning/10 border border-warning/20 rounded-lg">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <span class="text-warning mr-2">⚠️</span>
-                            <div>
-                                <span class="font-medium text-gray-900">${validation.inputName}</span>
-                                <div class="text-xs text-gray-500">Player not found</div>
-                            </div>
+                        <div>
+                            <span class="font-medium text-gray-900">${validation.inputName}</span>
+                            <div class="text-xs text-gray-500">Not found</div>
                         </div>
                         <button class="text-xs bg-secondary text-white px-2 py-1 rounded hover:bg-secondary/80 transition-colors player-select-btn"
                                 data-action="showPlayerSelectionModal" data-player-index="${index}" data-player-name="${validation.inputName}">

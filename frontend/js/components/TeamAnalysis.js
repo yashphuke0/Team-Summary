@@ -55,7 +55,9 @@ class TeamAnalysis {
             body: JSON.stringify(analysisData)
         });
         if (!response.ok) throw new Error('Failed to fetch team form');
-        return await response.json();
+        const result = await response.json();
+        // Extract data from the response structure
+        return result.success ? result.data : result;
     }
 
     async fetchHeadToHead(analysisData) {
@@ -65,7 +67,9 @@ class TeamAnalysis {
             body: JSON.stringify(analysisData)
         });
         if (!response.ok) throw new Error('Failed to fetch head-to-head');
-        return await response.json();
+        const result = await response.json();
+        // Extract data from the response structure
+        return result.success ? result.data : result;
     }
 
     async fetchPlayerPerformance(analysisData) {
@@ -75,7 +79,9 @@ class TeamAnalysis {
             body: JSON.stringify(analysisData)
         });
         if (!response.ok) throw new Error('Failed to fetch player performance');
-        return await response.json();
+        const result = await response.json();
+        // Extract data from the response structure
+        return result.success ? result.data : result;
     }
 
     async fetchVenueStats(analysisData) {
@@ -85,7 +91,9 @@ class TeamAnalysis {
             body: JSON.stringify(analysisData)
         });
         if (!response.ok) throw new Error('Failed to fetch venue stats');
-        return await response.json();
+        const result = await response.json();
+        // Extract data from the response structure
+        return result.success ? result.data : result;
     }
 
     async generateTeamSummary(teamData) {

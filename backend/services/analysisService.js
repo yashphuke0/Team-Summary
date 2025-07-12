@@ -23,7 +23,8 @@ async function fetchPlayerPerformance(playerName, teamName) {
   return data && data.length ? data[0] : null;
 }
 
-async function analyzeTeam({ players, captain, vice_captain, teamA, teamB, matchDate }) {
+async function analyzeTeam({ players, captain, viceCaptain, teamA, teamB, matchDate }) {
+    // players: array of { name, role, team, ... }
     if (!players || !Array.isArray(players) || players.length === 0) {
         return { success: false, message: 'Player data is required' };
     }
@@ -33,11 +34,24 @@ async function analyzeTeam({ players, captain, vice_captain, teamA, teamB, match
     if (!process.env.OPENAI_API_KEY) {
         return { success: false, message: 'OpenAI API key not configured' };
     }
+    // Build a summary string of the team composition
+    const roleCounts = {};
+    const teamCounts = {};
+    players.forEach(player => {
+        const role = player.role || 'Unknown';
+        const team = player.team || 'Unknown';
+        roleCounts[role] = (roleCounts[role] || 0) + 1;
+        teamCounts[team] = (teamCounts[team] || 0) + 1;
+    });
+    const roleSummary = Object.entries(roleCounts).map(([role, count]) => `${role}: ${count}`).join(', ');
+    const teamSummary = Object.entries(teamCounts).map(([team, count]) => `${team}: ${count}`).join(', ');
+    const playerList = players.map(p => `${p.name} (${p.role || 'Unknown'}, ${p.team || 'Unknown'})`).join(', ');
+    // Compose the OpenAI prompt
     const prompt = `Analyze this Dream11 fantasy cricket team for the match between ${teamA} vs ${teamB} on ${matchDate}:
 
-Players: ${players.join(', ')}
+Players: ${playerList}
 Captain: ${captain || 'Not specified'}
-Vice-captain: ${vice_captain || 'Not specified'}
+Vice-captain: ${viceCaptain || 'Not specified'}
 
 Please provide a comprehensive analysis covering:
 1. Team Balance: Analyze the batting, bowling, and all-rounder composition
@@ -46,7 +60,8 @@ Please provide a comprehensive analysis covering:
 4. Match Context: Consider the teams playing and any strategic insights
 5. Overall Rating: Rate the team out of 10 and explain why
 6. Suggestions: Provide 2-3 specific improvements if any
-
+Team Composition: ${roleSummary}
+Team Distribution: ${teamSummary}
 Keep the analysis concise but informative, focusing on fantasy cricket strategy.`;
     const completion = await openai.chat.completions.create({
         model: "gpt-4",
@@ -60,7 +75,7 @@ Keep the analysis concise but informative, focusing on fantasy cricket strategy.
                 content: prompt
             }
         ],
-        max_tokens: 1000,
+        max_tokens: 600,
         temperature: 0.7,
     });
     const analysis = completion.choices[0].message.content;
