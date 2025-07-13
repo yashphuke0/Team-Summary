@@ -130,7 +130,7 @@ async function teamSummary({ teamA, teamB, matchDate, players, captain, viceCapt
 
 Team Balance: Assess the overall team composition. Highlight any key role imbalances such as too many bowlers or lack of finishers. Suggest specific player swaps or adjustments to improve the balance.
 
-Captain and Vice-Captain: Recommend the best captain and vice-captain options based on the players’ current form, the conditions of the match, and the venue. Mention if any particular players have a better chance of contributing across different phases of the game (batting, bowling, fielding).
+Captain and Vice-Captain: Recommend the best captain and vice-captain options based on the players' current form, the conditions of the match, and the venue. Mention if any particular players have a better chance of contributing across different phases of the game (batting, bowling, fielding).
 
 Venue Analysis: Provide a quick analysis of the pitch conditions (is it suited for batsmen or bowlers?) and the match flow (whether the team should prefer batting first or chasing). Mention key players who benefit from these conditions (e.g., aggressive batsmen or pace bowlers).
 
@@ -148,7 +148,7 @@ ${playerPerformanceInfo ? '\n' + playerPerformanceInfo : ''}
 
 Instructions:
 - Use only actual player names from the team above.
-- Write only 4–5 lines, each line a single, direct, actionable insight or warning.
+- Write only 4-5 lines, each line a single, direct, actionable insight or warning.
 - Only mention things that would actually affect team selection (eligibility, role balance, captaincy, venue fit, risky picks, must-have swaps).
 - No generic theory, no filler, no emojis, no fantasy points.
 
@@ -181,4 +181,197 @@ Guidelines:
   };
 }
 
-module.exports = { analyzeTeam, teamSummary }; 
+async function analyzeMultipleTeams({ teams, teamA, teamB, matchDate, venueStatsData }) {
+    if (!teams || !Array.isArray(teams) || teams.length === 0) {
+        return { success: false, message: 'Teams data is required' };
+    }
+    if (!teamA || !teamB || !matchDate) {
+        return { success: false, message: 'Match details (teamA, teamB, matchDate) are required' };
+    }
+    if (!process.env.OPENAI_API_KEY) {
+        return { success: false, message: 'OpenAI API key not configured' };
+    }
+
+    // Venue info (if available)
+    let venueInfo = '';
+    let venueName = '';
+    if (venueStatsData && venueStatsData.success && venueStatsData.data && venueStatsData.data.venueStats) {
+        const v = venueStatsData.data.venueStats;
+        venueName = v.venue_name || '';
+        venueInfo = `Venue: ${v.venue_name || 'Unknown'} (${v.location || ''})\nAvg 1st Inn: ${v.avg_first_innings_score || 'N/A'}, Avg 2nd Inn: ${v.avg_second_innings_score || 'N/A'}\nPitch: ${v.pitch_type || 'neutral'} (${v.pitch_rating || 'balanced'})`;
+    }
+
+    // Prepare teams data for analysis
+    const teamsData = teams.map((team, index) => {
+        const roleCounts = {};
+        const teamCounts = {};
+        team.players.forEach(player => {
+            const role = player.role || 'Unknown';
+            const playerTeam = player.team || 'Unknown';
+            roleCounts[role] = (roleCounts[role] || 0) + 1;
+            teamCounts[playerTeam] = (teamCounts[playerTeam] || 0) + 1;
+        });
+        
+        return {
+            teamName: team.name || `Team ${index + 1}`,
+            players: team.players.map(p => `${p.name} (${p.role || 'Unknown'}, ${p.team || 'Unknown'})`).join(', '),
+            captain: team.captain || 'Not specified',
+            viceCaptain: team.viceCaptain || 'Not specified',
+            roleSummary: Object.entries(roleCounts).map(([role, count]) => `${role}: ${count}`).join(', '),
+            teamSummary: Object.entries(teamCounts).map(([team, count]) => `${team}: ${count}`).join(', ')
+        };
+    });
+
+    const prompt = `ANALYZE ${teams.length} DREAM11 TEAMS - ONLY 7 CRITERIA
+
+MATCH: ${teamA} vs ${teamB} on ${matchDate} at ${venueName || 'Unknown Venue'}
+
+${venueInfo ? `VENUE: ${venueInfo}\n` : ''}
+
+ANALYZE EACH TEAM USING ONLY THESE 7 CRITERIA:
+
+**Team Name:**
+Team Balance: [Rating: X/5] - brief explanation
+Captaincy Choice: [Rating: X/5] - brief explanation  
+Match Advantage: [Rating: X/5] - brief explanation
+Venue Strategy: [Rating: X/5] - brief explanation
+Covariance Analysis: [Rating: X/5] - brief explanation
+Pitch Conditions: [Rating: X/5] - brief explanation
+Overall Rating: [Rating: X/5] - brief explanation
+
+RULES:
+- NO numbered points
+- NO additional sections
+- ONLY the 7 criteria above for each team
+- Analyze ALL teams listed below
+
+TEAMS TO ANALYZE:
+
+${teamsData.map((team, index) => `
+**${team.teamName}:**
+Players: ${team.players}
+Captain: ${team.captain}
+Vice-Captain: ${team.viceCaptain}
+Roles: ${team.roleSummary}
+Teams: ${team.teamSummary}
+`).join('\n')}
+
+START ANALYSIS NOW.`;
+
+    const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+            {
+                role: "system",
+                content: "You are an IPL 2025 fantasy cricket expert. Provide ONLY the 7 criteria analysis for each team. No filler, no emojis, no additional sections. Be concise and direct."
+            },
+            {
+                role: "user",
+                content: prompt
+            }
+        ],
+        max_tokens: 1500,
+        temperature: 0.6,
+    });
+
+    let analysis = completion.choices[0].message.content;
+    
+    // Post-process the response to ensure correct format
+    analysis = cleanAnalysisResponse(analysis, teamsData);
+    
+    return {
+        success: true,
+        analysis: analysis,
+        message: 'Multiple teams analysis completed successfully'
+    };
+}
+
+// Helper function to clean and format the analysis response
+function cleanAnalysisResponse(analysis, teamsData) {
+    if (!analysis) return analysis;
+    
+    let cleaned = analysis;
+    
+    // Remove any numbered points (1., 2., 3., etc.)
+    cleaned = cleaned.replace(/^\d+\.\s*/gm, '');
+    
+    // Remove unwanted sections
+    const unwantedSections = [
+        /Strengths:.*?(?=\n\n|\n[A-Z]|$)/gis,
+        /Weaknesses:.*?(?=\n\n|\n[A-Z]|$)/gis,
+        /Recommendations?:.*?(?=\n\n|\n[A-Z]|$)/gis,
+        /Final Comparison.*?(?=\n\n|\n[A-Z]|$)/gis,
+        /Comparison ranking.*?(?=\n\n|\n[A-Z]|$)/gis
+    ];
+    
+    unwantedSections.forEach(pattern => {
+        cleaned = cleaned.replace(pattern, '');
+    });
+    
+    // Completely rebuild the analysis in the correct format
+    const criteria = [
+        'Team Balance',
+        'Captaincy Choice', 
+        'Match Advantage',
+        'Venue Strategy',
+        'Covariance Analysis',
+        'Pitch Conditions',
+        'Overall Rating'
+    ];
+    
+    let formattedAnalysis = '';
+    
+    // Process each team
+    teamsData.forEach((team, index) => {
+        formattedAnalysis += `**${team.teamName}:**\n`;
+        
+        // Extract ratings and explanations from the AI response for this team
+        let teamSection = cleaned.match(new RegExp(`\\*\\*${team.teamName}\\*\\*:.*?(?=\\*\\*|Ranking:|$)`, 'gis'));
+        
+        // If team section not found, look for any analysis that might belong to this team
+        if (!teamSection) {
+            // Look for any analysis that might be for this team (even without proper team header)
+            const allTeamSections = cleaned.match(/Team \d+:.*?(?=Team \d+:|Ranking:|$)/gis);
+            if (allTeamSections && allTeamSections[index]) {
+                teamSection = [allTeamSections[index]];
+            }
+        }
+        
+        criteria.forEach(criterion => {
+            let rating = '3/5';
+            let explanation = 'Analysis pending';
+            
+            if (teamSection) {
+                // Try multiple patterns to find the rating and explanation
+                const patterns = [
+                    // Pattern 1: "Criterion: [Rating: X/5] - explanation"
+                    new RegExp(`${criterion}:\\s*\\[Rating:\\s*(\\d+(?:\\.\\d+)?/5)\\]\\s*-\\s*(.*?)(?=\\n|$)`, 'i'),
+                    // Pattern 2: "Criterion: X/5 - explanation" (without brackets)
+                    new RegExp(`${criterion}:\\s*(\\d+(?:\\.\\d+)?/5)\\s*-\\s*(.*?)(?=\\n|$)`, 'i'),
+                    // Pattern 3: Just the rating without explanation
+                    new RegExp(`${criterion}:\\s*\\[Rating:\\s*(\\d+(?:\\.\\d+)?/5)\\]`, 'i'),
+                    new RegExp(`${criterion}:\\s*(\\d+(?:\\.\\d+)?/5)`, 'i')
+                ];
+                
+                for (const pattern of patterns) {
+                    const match = teamSection[0].match(pattern);
+                    if (match) {
+                        rating = match[1];
+                        if (match[2]) {
+                            explanation = match[2].trim();
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            formattedAnalysis += `${criterion}: [Rating: ${rating}] - ${explanation}\n`;
+        });
+        
+        formattedAnalysis += '\n';
+    });
+    
+    return formattedAnalysis.trim();
+}
+
+module.exports = { analyzeTeam, teamSummary, analyzeMultipleTeams }; 

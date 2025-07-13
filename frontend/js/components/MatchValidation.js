@@ -6,20 +6,6 @@ class MatchValidation {
         this.currentMatchDetails = null;
         this.onValidationSuccessCallback = null;
         this.onValidationErrorCallback = null;
-        
-        // IPL 2025 Teams
-        this.iplTeams = [
-            'Chennai Super Kings',
-            'Mumbai Indians', 
-            'Royal Challengers Bengaluru',
-            'Kolkata Knight Riders',
-            'Delhi Capitals',
-            'Punjab Kings',
-            'Rajasthan Royals',
-            'Sunrisers Hyderabad',
-            'Gujarat Titans',
-            'Lucknow Super Giants'
-        ];
     }
 
     initialize(teamAId, teamBId, matchDateId, validateBtnId) {
@@ -28,23 +14,9 @@ class MatchValidation {
         this.matchDateInput = document.getElementById(matchDateId);
         this.validateMatchBtn = document.getElementById(validateBtnId);
         
-        this.populateTeamDropdowns();
+        // Don't populate dropdowns here - they're already populated by the main app
         this.setDefaultDate();
         this.setupEventListeners();
-    }
-
-    populateTeamDropdowns() {
-        this.iplTeams.forEach(team => {
-            const optionA = document.createElement('option');
-            optionA.value = team;
-            optionA.textContent = team;
-            this.teamASelect.appendChild(optionA);
-
-            const optionB = document.createElement('option');
-            optionB.value = team;
-            optionB.textContent = team;
-            this.teamBSelect.appendChild(optionB);
-        });
     }
 
     setDefaultDate() {

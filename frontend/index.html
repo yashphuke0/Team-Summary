@@ -11,9 +11,8 @@
             theme: {
                 extend: {
                     colors: {
-                        // Team Summary Mobile UI Design System
-                        primary: '#009270',      // Primary green
-                        secondary: '#FFFFFF',    // White
+                        primary: '#009270',
+                        secondary: '#FFFFFF',
                         background: {
                             main: '#6B21A8',
                             gradient: 'linear-gradient(135deg, #6B21A8 0%, #4C1D95 100%)',
@@ -106,7 +105,6 @@
             box-shadow: 0 20px 25px -5px rgba(15, 76, 117, 0.1), 0 10px 10px -5px rgba(15, 76, 117, 0.04);
         }
         
-        /* Mobile-specific optimizations */
         @media (max-width: 640px) {
             .mobile-padding {
                 padding-left: 16px;
@@ -137,12 +135,11 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-primary">
-    <!-- Header with Enhanced Branding -->
+    <!-- Header -->
     <header class="bg-white shadow-cricket border-b border-gray-200 cricket-pattern relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5"></div>
         <div class="relative w-full max-w-sm mx-auto px-4 py-4 sm:py-6 mobile-padding">
             <div class="text-center">
-                <!-- Logo and Title -->
                 <div class="flex items-center justify-center mb-2">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mr-2 sm:mr-3 animate-bounce-subtle">
                         <span class="text-white text-lg sm:text-xl font-bold">🏏</span>
@@ -151,7 +148,6 @@
                         cricbuzz11
                     </h1>
                 </div>
-                <!-- Subtitle -->
                 <p class="text-xs sm:text-sm text-gray-600 font-medium">
                     Team Analyzer
                 </p>
@@ -162,25 +158,13 @@
         </div>
     </header>
 
-    <!-- Main Content with Enhanced Spacing -->
+    <!-- Main Content -->
     <main class="w-full max-w-sm mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 mobile-padding">
         
-        <!-- Analysis Mode Selection -->
-        <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-3 sm:p-4">
-            <div class="grid grid-cols-2 gap-2 sm:gap-3">
-                <button class="bg-primary text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold shadow-md text-sm sm:text-base">
-                    👤 Single Team
-                </button>
-                <button onclick="window.location.href='bulk-analysis.html'" class="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-900 transition-all duration-300 shadow-md text-sm sm:text-base">
-                    🏆 Multi Team
-                </button>
-            </div>
-        </section>
-        
-        <!-- Match Selection Section - New Priority -->
+        <!-- Match Selection Section -->
         <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
             <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-cricket-blue to-secondary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">⚡</span>
                 </div>
                 <h2 class="text-base sm:text-lg font-bold text-gray-900">Match Selection</h2>
@@ -197,7 +181,7 @@
 
                 <!-- VS Indicator -->
                 <div class="flex justify-center">
-                    <div class="bg-primary text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold shadow-md" style="color: white !important;">
+                    <div class="bg-primary text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold shadow-md">
                         VS
                     </div>
                 </div>
@@ -209,6 +193,7 @@
                         <option value="">Select Team B</option>
                     </select>
                 </div>
+
                 <!-- Match Date -->
                 <div>
                     <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">Match Date</label>
@@ -222,62 +207,98 @@
             </div>
         </section>
 
-        <!-- Upload Section with Enhanced Design -->
+        <!-- Upload Section -->
         <section id="upload-section" class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in hidden">
             <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-success to-cricket-green rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-success to-primary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">📱</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Upload Team Screenshot</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900">Upload Teams</h2>
             </div>
-            
-            <!-- File Upload Area with Enhanced Styling -->
-            <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-xl p-6 sm:p-8 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 cursor-pointer group">
-                <input type="file" id="file-input" accept="image/*" class="hidden">
-                <div id="upload-content">
-                    <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-primary" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
+
+            <!-- Upload Tabs -->
+            <div class="flex border-b border-gray-200 mb-4">
+                <button id="screenshot-tab" class="flex-1 py-2 px-3 text-sm font-medium border-b-2 border-primary text-primary">
+                    📸 Screenshots
+                </button>
+                <button id="csv-tab" class="flex-1 py-2 px-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                    📊 CSV File
+                </button>
+            </div>
+
+            <!-- Screenshots Upload Section -->
+            <div id="screenshots-section">
+                <div id="screenshots-upload-area" class="border-2 border-dashed border-gray-300 rounded-xl p-6 sm:p-8 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 cursor-pointer group">
+                    <input type="file" id="screenshots-input" accept="image/*" multiple class="hidden">
+                    <div id="screenshots-upload-content">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-primary" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <p class="text-gray-700 mb-2 font-medium text-sm sm:text-base">Tap to upload or drag & drop</p>
+                        <p class="text-xs sm:text-sm text-gray-500">PNG, JPG up to 5MB each</p>
+                        <p class="text-xs text-gray-400 mt-2">📱 Fantasy cricket team screenshots (up to 10)</p>
                     </div>
-                    <p class="text-gray-700 mb-2 font-medium text-sm sm:text-base">Tap to upload or drag & drop</p>
-                    <p class="text-xs sm:text-sm text-gray-500">PNG, JPG up to 5MB</p>
-                    <p class="text-xs text-gray-400 mt-2">📱 Fantasy cricket team screenshot</p>
+                    
+                    <!-- Loading State -->
+                    <div id="screenshots-loading" class="hidden">
+                        <div class="relative flex justify-center items-center mb-3 sm:mb-4" style="height: 40px; width: 40px;">
+                            <div class="absolute inset-0 animate-spin rounded-full border-4 border-primary/20 border-t-primary" style="animation-duration: 1s;"></div>
+                            <div class="absolute inset-0 animate-spin rounded-full border-4 border-secondary/20 border-t-secondary" style="animation-duration: 1.5s;"></div>
+                        </div>
+                        <p class="text-primary font-semibold text-sm sm:text-base">Processing screenshots...</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Extracting player data</p>
+                    </div>
                 </div>
-                
-                <!-- Loading State with Enhanced Animation -->
-                <div id="upload-loading" class="hidden">
-                    <div class="relative flex justify-center items-center mb-3 sm:mb-4" style="height: 40px; width: 40px;">
-                        <div class="absolute inset-0 animate-spin rounded-full border-4 border-primary/20 border-t-primary" style="animation-duration: 1s;"></div>
-                        <div class="absolute inset-0 animate-spin rounded-full border-4 border-secondary/20 border-t-secondary" style="animation-duration: 1.5s;"></div>
-                    </div>
-                    <p class="text-primary font-semibold text-sm sm:text-base">Processing screenshot...</p>
-                    <p class="text-xs sm:text-sm text-gray-500 mt-1">Extracting player data</p>
+
+                <!-- Screenshots Preview -->
+                <div id="screenshots-preview" class="hidden mt-4">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Uploaded Screenshots:</h3>
+                    <div id="screenshots-grid" class="grid grid-cols-2 gap-2"></div>
                 </div>
             </div>
 
-            <!-- Image Preview with Enhanced Styling -->
-            <div id="image-preview" class="hidden mt-3 sm:mt-4">
-                <div class="relative rounded-xl overflow-hidden border-2 border-gray-200">
-                    <img id="preview-img" class="w-full h-32 sm:h-48 object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            <!-- CSV Upload Section -->
+            <div id="csv-section" class="hidden">
+                <div id="csv-upload-area" class="border-2 border-dashed border-gray-300 rounded-xl p-6 sm:p-8 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 cursor-pointer group">
+                    <input type="file" id="csv-input" accept=".csv" class="hidden">
+                    <div id="csv-upload-content">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-primary" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M9 12h6m-6 6h6m2 6H9m12-6h6m-6 6h6m2 6H15M9 6h30v36H9V6z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <p class="text-gray-700 mb-2 font-medium text-sm sm:text-base">Tap to upload CSV file</p>
+                        <p class="text-xs sm:text-sm text-gray-500">CSV format up to 1MB</p>
+                        <p class="text-xs text-gray-400 mt-2">📊 Multiple teams in one file</p>
+                        <button id="download-template" class="mt-3 text-xs text-primary hover:text-primary/80 font-medium underline">
+                            📥 Download CSV Template
+                        </button>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="csv-loading" class="hidden">
+                        <div class="relative flex justify-center items-center mb-3 sm:mb-4" style="height: 40px; width: 40px;">
+                            <div class="absolute inset-0 animate-spin rounded-full border-4 border-primary/20 border-t-primary" style="animation-duration: 1s;"></div>
+                        </div>
+                        <p class="text-primary font-semibold text-sm sm:text-base">Processing CSV...</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Extracting team data</p>
+                    </div>
                 </div>
-                <button id="remove-image" class="mt-2 sm:mt-3 text-xs sm:text-sm text-danger hover:text-danger/80 font-medium transition-colors duration-200">
-                    🗑️ Remove image
-                </button>
             </div>
         </section>
 
 
     </main>
 
-    <!-- Enhanced Toast Messages -->
+    <!-- Toast Messages -->
     <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-sm mx-auto bg-red-600 text-white p-3 sm:p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
         <div class="flex items-center">
             <div class="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 sm:mr-3">
                 <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-            </svg>
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
             </div>
             <span id="error-message" class="font-medium text-sm sm:text-base"></span>
         </div>
@@ -287,68 +308,20 @@
         <div class="flex items-center">
             <div class="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 sm:mr-3">
                 <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-            </svg>
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
             </div>
             <span id="success-message" class="font-medium text-sm sm:text-base"></span>
         </div>
     </div>
 
-    <!-- Player Selection Modal -->
-    <div id="player-selection-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[85vh] overflow-hidden animate-scale-in">
-            <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-primary to-primary-light text-white p-3 sm:p-4">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-base sm:text-lg font-bold">🏏 Select Player</h3>
-                    <button id="close-modal" class="text-white/80 hover:text-white transition-colors">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <p id="modal-subtitle" class="text-white/90 text-xs sm:text-sm mt-1">Choose from available players</p>
-            </div>
-
-            <!-- Modal Content -->
-            <div class="p-3 sm:p-4">
-                <!-- Search Input -->
-                <div class="mb-3 sm:mb-4">
-                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">Search Players</label>
-                    <input type="text" id="player-search" placeholder="Type to search..." 
-                           class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-sm">
-                </div>
-
-                <!-- Team Filter -->
-                <div class="mb-3 sm:mb-4">
-                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">Filter by Team</label>
-                    <select id="team-filter" class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-sm">
-                        <option value="">All Teams</option>
-                    </select>
-                </div>
-
-                <!-- Players List -->
-                <div class="mb-3 sm:mb-4">
-                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">Available Players</label>
-                    <div id="modal-players-list" class="max-h-48 sm:max-h-64 overflow-y-auto space-y-1.5 sm:space-y-2 border border-gray-200 rounded-xl p-2 text-sm"></div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-2 sm:gap-3">
-                    <button id="cancel-selection" class="w-full bg-gray-200 text-gray-700 py-2.5 sm:py-3 px-4 rounded-xl font-semibold hover:bg-gray-300 transition-colors text-sm">
-                        Cancel Selection
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Load Component Scripts -->
+    <!-- Load Scripts -->
     <script src="js/utils/constants.js"></script>
     <script src="js/components/Toast.js"></script>
-    <script src="js/components/FileUpload.js"></script>
     <script src="js/components/MatchValidation.js"></script>
     <script src="js/components/PlayerValidation.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/components/FileUpload.js"></script>
+    <script src="js/components/TeamAnalysis.js"></script>
+    <script src="js/enhanced-app.js"></script>
 </body>
 </html> 

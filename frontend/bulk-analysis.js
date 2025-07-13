@@ -1,20 +1,6 @@
 // Configuration
 const API_BASE_URL = 'http://localhost:3001/api';
 
-// IPL 2025 Teams
-const iplTeams = [
-    'Chennai Super Kings',
-    'Mumbai Indians', 
-    'Royal Challengers Bengaluru',
-    'Kolkata Knight Riders',
-    'Delhi Capitals',
-    'Punjab Kings',
-    'Rajasthan Royals',
-    'Sunrisers Hyderabad',
-    'Gujarat Titans',
-    'Lucknow Super Giants'
-];
-
 // DOM Elements
 let csvTab, screenshotsTab, csvSection, screenshotsSection;
 let csvUploadArea, csvInput, csvLoading, csvUploadContent;
@@ -188,7 +174,12 @@ function switchTab(tabName) {
 }
 
 function populateTeamDropdowns() {
-    iplTeams.forEach(team => {
+    // Clear existing options first
+    teamASelect.innerHTML = '<option value="">Select Team A</option>';
+    teamBSelect.innerHTML = '<option value="">Select Team B</option>';
+
+    // Use teams from constants to ensure consistency
+    CONSTANTS.IPL_TEAMS.forEach(team => {
         const optionA = document.createElement('option');
         optionA.value = team;
         optionA.textContent = team;
@@ -520,30 +511,36 @@ async function analyzeIndividualTeam() {
             fetchVenueStats()
         ]);
 
-        // Then call the team summary endpoint with all data
-        const response = await fetch(`${API_BASE_URL}/team-summary`, {
+        // Convert players to the format expected by analyzeTeam function
+        const formattedPlayers = currentTeamData.players.map(playerName => {
+            // For bulk analysis, we'll use basic formatting since validation results might not be available
+            return {
+                name: playerName,
+                role: 'Unknown',
+                team: 'Unknown'
+            };
+        });
+
+        // Then call the analyze endpoint with team data
+        const response = await fetch(`${API_BASE_URL}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                players: currentTeamData.players,
+                players: formattedPlayers,
                 captain: currentTeamData.captain,
                 viceCaptain: currentTeamData.vice_captain,
                 teamA: currentMatchDetails.teamA,
                 teamB: currentMatchDetails.teamB,
-                matchDate: currentMatchDetails.matchDate,
-                teamFormData: teamFormData,
-                headToHeadData: headToHeadData,
-                playerPerformanceData: playerPerformanceData,
-                venueStatsData: venueStatsData
+                matchDate: currentMatchDetails.matchDate
             })
         });
 
         const result = await response.json();
 
         if (result.success) {
-            displayIndividualAnalysis(result.summary);
+            displayIndividualAnalysis(result.analysis);
             showSuccess('Team analysis completed successfully');
         } else {
             showError(result.message || 'Failed to analyze team');
@@ -751,25 +748,27 @@ async function analyzeAllTeams() {
             try {
                 console.log(`Analyzing team ${i + 1}/${currentTeams.length}: ${team.teamName || `Team ${i + 1}`}`);
                 
-                // Fetch player performance data for this specific team
-                const playerPerformanceData = await fetchPlayerPerformance(team.captain, team.vice_captain);
+                // Convert players to the format expected by analyzeTeam function
+                const formattedPlayers = team.players.map(playerName => {
+                    return {
+                        name: playerName,
+                        role: 'Unknown',
+                        team: 'Unknown'
+                    };
+                });
                 
-                const response = await fetch(`${API_BASE_URL}/team-summary`, {
+                const response = await fetch(`${API_BASE_URL}/analyze`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        players: team.players,
+                        players: formattedPlayers,
                         captain: team.captain,
                         viceCaptain: team.vice_captain,
                         teamA: currentMatchDetails.teamA,
                         teamB: currentMatchDetails.teamB,
-                        matchDate: currentMatchDetails.matchDate,
-                        teamFormData: teamFormData,
-                        headToHeadData: headToHeadData,
-                        playerPerformanceData: playerPerformanceData,
-                        venueStatsData: venueStatsData
+                        matchDate: currentMatchDetails.matchDate
                     })
                 });
 
@@ -780,8 +779,8 @@ async function analyzeAllTeams() {
                         teamId: team.teamId || i + 1,
                         teamName: team.teamName || `Team ${i + 1}`,
                         analysis: {
-                            summary: result.summary,
-                            aiAnalysis: result.summary
+                            summary: result.analysis,
+                            aiAnalysis: result.analysis
                         },
                         players: team.players,
                         captain: team.captain,

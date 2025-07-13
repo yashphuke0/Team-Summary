@@ -112,7 +112,7 @@ Team Beta,"Rohit Sharma, Virat Kohli, MS Dhoni, Jasprit Bumrah, Ravindra Jadeja,
 - `POST /api/csv/process-teams` - Process CSV upload
 - `POST /api/ocr/process-multiple` - Process multiple screenshots
 - `POST /api/analyze/bulk-teams` - Bulk team analysis
-- `POST /api/analyze` - Individual team analysis
+- `POST /api/analyze` - Team Details
 
 ### Data Flow
 1. **Upload** → Process files/screenshots

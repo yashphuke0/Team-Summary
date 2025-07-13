@@ -481,21 +481,47 @@ class TeamAnalysisPage {
             document.getElementById('summary-loading').classList.remove('hidden');
             document.getElementById('summary-content').classList.add('hidden');
 
-            // Generate summary
-            const summaryResult = await this.teamAnalysis.generateSummary({
+            // Get team data from sessionStorage
+            const teamData = JSON.parse(sessionStorage.getItem('teamData') || '{}');
+            
+            // Prepare players array and convert to the format expected by analyzeTeam function
+            const formattedPlayers = (teamData.players || []).map(p => {
+                const playerName = typeof p === 'string' ? p : p.name;
+                return {
+                    name: playerName,
+                    role: 'Unknown',
+                    team: 'Unknown'
+                };
+            });
+
+            // Generate analysis using analyzeTeam function
+            const response = await fetch(`${CONSTANTS.API_BASE_URL}/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                 teamA: matchData.teamA,
                 teamB: matchData.teamB,
                 matchDate: matchData.matchDate,
                 captain: captainName,
-                viceCaptain: viceCaptainName
+                    viceCaptain: viceCaptainName,
+                    players: formattedPlayers
+                })
             });
+
+            const analysisResult = await response.json();
 
             // Hide loading and show content
             document.getElementById('summary-loading').classList.add('hidden');
             document.getElementById('summary-content').classList.remove('hidden');
 
-            // Display summary
-            document.getElementById('summary-text').innerHTML = summaryResult.summary;
+            // Display analysis
+            if (analysisResult.success) {
+                document.getElementById('summary-text').innerHTML = analysisResult.analysis;
+            } else {
+                this.toast.showError(analysisResult.message || 'Analysis failed');
+            }
 
         } catch (error) {
             console.error('Summary generation error:', error);

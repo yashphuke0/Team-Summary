@@ -65,25 +65,44 @@ class TeamPerformancePage {
             document.getElementById('analysis-loading').classList.remove('hidden');
             document.getElementById('analysis-content').classList.add('hidden');
 
-            // Prepare players array (ensure array of strings)
-            const players = teamData.players.map(p => typeof p === 'string' ? p : p.name);
+            // Prepare players array and convert to the format expected by analyzeTeam function
+            const formattedPlayers = teamData.players.map(p => {
+                const playerName = typeof p === 'string' ? p : p.name;
+                return {
+                    name: playerName,
+                    role: 'Unknown',
+                    team: 'Unknown'
+                };
+            });
 
-            // Perform team analysis
-            const analysisResult = await this.teamAnalysis.analyzeTeam({
+            // Perform team analysis using the analyzeTeam function
+            const response = await fetch(`${CONSTANTS.API_BASE_URL}/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                 teamA: matchData.teamA,
                 teamB: matchData.teamB,
                 matchDate: matchData.matchDate,
-                players,
+                    players: formattedPlayers,
                 captain: captainName,
                 viceCaptain: viceCaptainName
+                })
             });
+
+            const analysisResult = await response.json();
 
             // Hide loading and show content
             document.getElementById('analysis-loading').classList.add('hidden');
             document.getElementById('analysis-content').classList.remove('hidden');
 
             // Display analysis results
-            this.displayAnalysisResults(analysisResult);
+            if (analysisResult.success) {
+                this.displayAnalysisResults(analysisResult.analysis);
+            } else {
+                this.toast.showError(analysisResult.message || 'Analysis failed');
+            }
 
         } catch (error) {
             console.error('Analysis error:', error);
