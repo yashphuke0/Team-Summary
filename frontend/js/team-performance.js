@@ -212,40 +212,13 @@ class TeamPerformancePage {
             document.getElementById('team-balance-content').innerHTML = '';
         }
         // Team balance (Team Composition)
-        this.displayTeamComposition();
+        // this.displayTeamComposition(); // Removed as Team Composition block is gone
         // Log all validated team players
         const validatedPlayers = JSON.parse(sessionStorage.getItem('validatedPlayers') || '[]');
         console.log('All validated team players:', validatedPlayers);
     }
 
-    displayTeamComposition() {
-        const validatedPlayers = JSON.parse(sessionStorage.getItem('validatedPlayers') || '[]');
-        if (!validatedPlayers.length) {
-            document.getElementById('team-balance-content').innerHTML = '<div class="text-gray-500">No team balance analysis available</div>';
-            return;
-        }
-        // Count roles and teams
-        const roleCounts = {};
-        const teamCounts = {};
-        validatedPlayers.forEach(player => {
-            const role = player.role || 'Unknown';
-            const team = player.team || 'Unknown';
-            roleCounts[role] = (roleCounts[role] || 0) + 1;
-            teamCounts[team] = (teamCounts[team] || 0) + 1;
-        });
-        // Build HTML
-        let html = '<div class="mb-2 font-semibold text-gray-800">Role Distribution:</div><ul>';
-        Object.entries(roleCounts).forEach(([role, count]) => {
-            html += `<li>${role}: <span class="font-bold">${count}</span></li>`;
-        });
-        html += '</ul>';
-        html += '<div class="mt-2 mb-2 font-semibold text-gray-800">Team Distribution:</div><ul>';
-        Object.entries(teamCounts).forEach(([team, count]) => {
-            html += `<li>${team}: <span class="font-bold">${count}</span></li>`;
-        });
-        html += '</ul>';
-        document.getElementById('team-balance-content').innerHTML = html;
-    }
+    // Removed displayTeamComposition() function as Team Composition block is gone
 
     formatTeamForm(matches) {
         if (!matches || matches.length === 0) {
@@ -269,43 +242,30 @@ class TeamPerformancePage {
             return '<div class="text-gray-500">No head-to-head data available</div>';
         }
 
-        const matches = h2hData.allHistoricalMatches.slice(0, 8);
         const teamAWins = h2hData.teamAWins || 0;
         const teamBWins = h2hData.teamBWins || 0;
         const draws = h2hData.draws || 0;
-
-        const matchHistoryHtml = matches.length > 0 ? 
-            matches.map(match => {
-                const winnerIcon = h2hData.teamA === match.winner ? '🔵' : 
-                                 h2hData.teamB === match.winner ? '🟣' : '⚪';
-                const formattedDate = new Date(match.match_date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                });
-                return `
-                <div class="flex justify-between items-center py-1 text-xs border-b border-gray-100 last:border-0">
-                    <span class="text-gray-600">${formattedDate}</span>
-                    <div class="flex items-center gap-1">
-                        <span class="text-gray-500">${match.team1} vs ${match.team2}</span>
-                        <span>${winnerIcon}</span>
-                    </div>
-                </div>
-                `;
-            }).join('') : 
-            '<div class="text-xs text-gray-500 text-center py-2">No match history available</div>';
+        const totalMatches = h2hData.totalMatches || teamAWins + teamBWins + draws;
+        
+        const teamAWinRate = Math.round((teamAWins / totalMatches) * 100);
+        const teamBWinRate = Math.round((teamBWins / totalMatches) * 100);
 
         return `
-            <div class="mb-3">
-                <div class="text-sm font-semibold text-gray-800 mb-2">
-                    ${h2hData.teamA} ${teamAWins} - ${teamBWins} ${h2hData.teamB}
+            <div class="flex justify-center items-center text-center">
+                <div class="flex-1 text-center">
+                    <div class="text-2xl font-bold text-gray-800">${teamAWins}</div>
+                    <div class="text-xs text-gray-600">${h2hData.teamA}</div>
+                    <div class="text-xs font-medium mt-1">${teamAWinRate}% win rate</div>
                 </div>
-                <div class="text-xs text-gray-600 mb-3">
-                    Total: ${h2hData.totalMatches || matches.length} matches (${draws} draws)
+                <div class="px-4">
+                    <div class="text-2xl font-bold text-gray-600">${totalMatches}</div>
+                    <div class="text-xs text-gray-500">Matches</div>
                 </div>
-            </div>
-            <div class="max-h-32 overflow-y-auto">
-                ${matchHistoryHtml}
+                <div class="flex-1 text-center">
+                    <div class="text-2xl font-bold text-gray-800">${teamBWins}</div>
+                    <div class="text-xs text-gray-600">${h2hData.teamB}</div>
+                    <div class="text-xs font-medium mt-1">${teamBWinRate}% win rate</div>
+                </div>
             </div>
         `;
     }
@@ -318,44 +278,33 @@ class TeamPerformancePage {
         const matches = playerData.recentMatches.slice(0, 5);
         const role = playerData.role || 'Unknown';
         
-        const matchesHtml = matches.map(match => {
-            const date = new Date(match.match_date).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric' 
-            });
-            const runs = match.runs_scored || 0;
-            const wickets = match.wickets_taken || 0;
-            const balls = match.balls_faced || 0;
-            const strikeRate = match.strike_rate || 0;
-            const economy = match.economy_rate || 0;
-            
-            let performanceText = '';
+        // Calculate average stats
+        let totalRuns = 0, totalWickets = 0, matchCount = matches.length;
+        
+        matches.forEach(match => {
             if (role.toLowerCase().includes('batsman') || role.toLowerCase().includes('all-rounder')) {
-                performanceText = `${runs} runs`;
-                if (balls > 0) performanceText += ` (${balls} balls)`;
-                if (strikeRate > 0) performanceText += `, SR: ${strikeRate}`;
+                totalRuns += (match.runs_scored || 0);
             }
             if (role.toLowerCase().includes('bowler') || role.toLowerCase().includes('all-rounder')) {
-                if (performanceText) performanceText += ' | ';
-                performanceText += `${wickets} wickets`;
-                if (economy > 0) performanceText += `, Econ: ${economy}`;
+                totalWickets += (match.wickets_taken || 0);
             }
-            
-            return `
-                <div class="flex justify-between items-center py-1 text-xs border-b border-gray-100 last:border-0">
-                    <span class="text-gray-600">${date}</span>
-                    <span class="text-gray-800 font-medium">${performanceText}</span>
-                </div>
-            `;
-        }).join('');
-
+        });
+        
+        const avgRuns = (totalRuns / matchCount).toFixed(1);
+        const avgWickets = (totalWickets / matchCount).toFixed(1);
+        
+        // Determine which stat to show based on role
+        const statValue = role.toLowerCase().includes('batsman') ? avgRuns : avgWickets;
+        const statLabel = role.toLowerCase().includes('batsman') ? 'Avg Runs' : 'Avg Wickets';
+        
+        // Format exactly like the screenshot
         return `
-            <div class="mb-2">
-                <div class="text-xs text-gray-600 mb-1">Role: ${role}</div>
+            <div class="text-xs text-gray-600">${role.toLowerCase()}</div>
+            <div class="flex justify-between items-center">
+                <div class="font-bold text-xl text-gray-800">${statValue}</div>
+                <div class="text-xs text-gray-500">${matchCount} matches</div>
             </div>
-            <div class="max-h-24 overflow-y-auto">
-                ${matchesHtml}
-            </div>
+            <div class="text-xs text-gray-600">${statLabel}</div>
         `;
     }
 
@@ -365,19 +314,54 @@ class TeamPerformancePage {
         }
 
         const stats = venueData.venueStats;
+        const teamARecord = venueData.teamARecord || { wins: 0, losses: 0, total: 0 };
+        const teamBRecord = venueData.teamBRecord || { wins: 0, losses: 0, total: 0 };
+        
+        const teamAWinRate = teamARecord.total > 0 ? Math.round((teamARecord.wins / teamARecord.total) * 100) : 0;
+        const teamBWinRate = teamBRecord.total > 0 ? Math.round((teamBRecord.wins / teamBRecord.total) * 100) : 0;
         
         return `
-            <div class="space-y-2">
-                <div class="text-sm font-semibold text-gray-800">
-                    ${stats.venue_name || 'Unknown Venue'} (${stats.location || 'Unknown'})
+            <div class="text-center mb-3">
+                <div class="font-semibold text-gray-800">${stats.venue_name || 'Unknown Venue'}</div>
+                <div class="text-xs text-gray-600">${stats.location || 'Unknown'}</div>
+            </div>
+            
+            <div class="text-center border-b pb-2 mb-3">
+                <div class="uppercase text-xs font-bold text-gray-700">${stats.pitch_type || 'BATTING'} PITCH</div>
+                <div class="text-xs text-gray-600">${stats.pitch_rating || 'good for batting'}</div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 text-center text-xs mb-3">
+                <div>
+                    <div class="font-semibold text-lg">${stats.avg_first_innings_score || 'N/A'}</div>
+                    <div class="text-gray-600">1st Innings</div>
                 </div>
-                <div class="text-xs text-gray-600">
-                    <div>Avg 1st Inn: ${stats.avg_first_innings_score || 'N/A'}</div>
-                    <div>Avg 2nd Inn: ${stats.avg_second_innings_score || 'N/A'}</div>
-                    <div>Pitch: ${stats.pitch_type || 'neutral'} (${stats.pitch_rating || 'balanced'})</div>
-                    <div>Chase Success: ${stats.chase_success_rate || 0}%</div>
-                    <div>Toss Suggestion: ${stats.toss_decision_suggestion || 'bat first'}</div>
+                <div>
+                    <div class="font-semibold text-lg">${stats.avg_second_innings_score || 'N/A'}</div>
+                    <div class="text-gray-600">2nd Innings</div>
                 </div>
+                <div>
+                    <div class="font-semibold text-lg">${stats.chase_success_rate || '0'}%</div>
+                    <div class="text-gray-600">Chase Success</div>
+                </div>
+            </div>
+            
+            <div class="text-xs border-t border-gray-200 pt-2">
+                <div class="font-medium mb-1">Team Records at Venue</div>
+                <div class="flex justify-between items-center mb-1">
+                    <div>${venueData.teamA || 'Team A'}</div>
+                    <div class="font-semibold">${teamARecord.wins}/${teamARecord.total} (${teamAWinRate}%)</div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>${venueData.teamB || 'Team B'}</div>
+                    <div class="font-semibold">${teamBRecord.wins}/${teamBRecord.total} (${teamBWinRate}%)</div>
+                </div>
+            </div>
+            
+            <div class="text-xs border-t border-gray-200 pt-2 mt-2 text-center">
+                <div class="font-medium mb-1">Toss Strategy</div>
+                <div class="font-bold text-gray-800">${stats.toss_decision_suggestion?.toUpperCase() || 'BAT FIRST'}</div>
+                <div class="text-gray-500 text-xs">Based on ${stats.historical_matches || 0} historical matches</div>
             </div>
         `;
     }

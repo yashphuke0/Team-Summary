@@ -6,6 +6,7 @@
     <title>Team Analysis - cricbuzz11</title>
     <link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/app.css">
     <script>
         tailwind.config = {
             theme: {
@@ -136,30 +137,8 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-primary">
-    <!-- Header with Enhanced Branding -->
-    <header class="bg-white shadow-cricket border-b border-gray-200 cricket-pattern relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5"></div>
-        <div class="relative w-full max-w-sm mx-auto px-4 py-4 sm:py-6 mobile-padding">
-            <div class="text-center">
-                <!-- Logo and Title -->
-                <div class="flex items-center justify-center mb-2">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mr-2 sm:mr-3 animate-bounce-subtle">
-                        <span class="text-white text-lg sm:text-xl font-bold">🏏</span>
-                    </div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
-                        cricbuzz11
-                    </h1>
-                </div>
-                <!-- Subtitle -->
-                <p class="text-xs sm:text-sm text-gray-600 font-medium">
-                    Team Analysis
-                </p>
-                <p class="text-xs text-gray-500 mt-1">
-                    AI-Powered Fantasy Cricket Analysis
-                </p>
-            </div>
-        </div>
-    </header>
+    <div id="app-header"></div>
+    <script src="js/components/AppHeader.js"></script>
 
     <!-- Main Content with Enhanced Spacing -->
     <main class="w-full max-w-sm mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 mobile-padding">
