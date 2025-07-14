@@ -1,0 +1,124 @@
+/* Custom Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceSubtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Cricket Pattern Background */
+.cricket-pattern {
+    background-image: 
+        radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 2px),
+        radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2px, transparent 2px);
+    background-size: 100px 100px;
+}
+
+/* Card Hover Effects */
+.card-hover {
+    transition: all 0.3s ease;
+    border-radius: 0.25rem !important;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(15, 76, 117, 0.1), 0 10px 10px -5px rgba(15, 76, 117, 0.04);
+    border-radius: 0.25rem !important;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 640px) {
+    .mobile-padding {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .mobile-text-sm {
+        font-size: 14px;
+    }
+    
+    .mobile-text-xs {
+        font-size: 12px;
+    }
+    
+    .mobile-gap-2 {
+        gap: 8px;
+    }
+    
+    .mobile-gap-3 {
+        gap: 12px;
+    }
+    
+    .mobile-p-3 {
+        padding: 12px;
+    }
+    
+    .mobile-p-4 {
+        padding: 16px;
+    }
+    
+    .mobile-p-6 {
+        padding: 20px;
+    }
+}
+
+/* Additional Styles for Bulk Analysis */
+.gradient-text {
+    background: linear-gradient(135deg, #0f4c75 0%, #3282b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Modal styles */
+.modal-open {
+    overflow: hidden;
+}
+
+/* Player validation card animations */
+.player-card-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.player-card-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Validation status colors */
+.validation-valid {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+    border-radius: 0.25rem !important;
+}
+
+.validation-invalid {
+    border-color: #f59e0b;
+    background-color: #fffbeb;
+    border-radius: 0.25rem !important;
+}
+
+.validation-missing {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+    border-radius: 0.25rem !important;
+} 
+
+.font-inter {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'sans-serif';
+} 

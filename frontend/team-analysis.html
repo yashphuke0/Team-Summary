@@ -6,134 +6,8 @@
     <title>Team Analysis - cricbuzz11</title>
     <link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#009270',
-                        secondary: '#FFFFFF',
-                        background: {
-                            main: '#6B21A8',
-                            gradient: 'linear-gradient(135deg, #6B21A8 0%, #4C1D95 100%)',
-                            cards: '#FFFFFF',
-                            darkCards: '#1F2937'
-                        },
-                        text: {
-                            primary: '#000000',
-                            secondary: '#6B7280',
-                            inverse: '#FFFFFF',
-                            muted: '#9CA3AF'
-                        },
-                        status: {
-                            success: '#10B981',
-                            error: '#EF4444',
-                            warning: '#F59E0B',
-                            info: '#3B82F6',
-                            neutral: '#6B7280'
-                        },
-                        ui: {
-                            border: '#E5E7EB',
-                            divider: '#F3F4F6',
-                            overlay: 'rgba(0, 0, 0, 0.5)',
-                            shadow: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    },
-                    fontFamily: {
-                        'primary': ['Saira', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        'numeric': ['Saira', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'monospace']
-                    },
-                    spacing: {
-                        'xs': '4px',
-                        'sm': '8px',
-                        'md': '16px',
-                        'lg': '24px',
-                        'xl': '32px',
-                        '2xl': '48px',
-                        '3xl': '64px'
-                    },
-                    borderRadius: {
-                        'sm': '8px',
-                        'md': '12px',
-                        'lg': '16px',
-                        'xl': '24px',
-                        'full': '9999px'
-                    },
-                    boxShadow: {
-                        'sm': '0 2px 4px rgba(0, 0, 0, 0.05)',
-                        'md': '0 4px 12px rgba(0, 0, 0, 0.08)',
-                        'lg': '0 8px 24px rgba(0, 0, 0, 0.12)',
-                        'xl': '0 16px 32px rgba(0, 0, 0, 0.16)'
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-in-out',   
-                        'slide-up': 'slideUp 0.3s ease-out',
-                        'bounce-subtle': 'bounceSubtle 2s infinite',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes bounceSubtle {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .cricket-pattern {
-            background-image: 
-                radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 2px),
-                radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2px, transparent 2px);
-            background-size: 100px 100px;
-        }
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(15, 76, 117, 0.1), 0 10px 10px -5px rgba(15, 76, 117, 0.04);
-        }
-        
-        /* Mobile-specific optimizations */
-        @media (max-width: 640px) {
-            .mobile-padding {
-                padding-left: 16px;
-                padding-right: 16px;
-            }
-            .mobile-text-sm {
-                font-size: 14px;
-            }
-            .mobile-text-xs {
-                font-size: 12px;
-            }
-            .mobile-gap-2 {
-                gap: 8px;
-            }
-            .mobile-gap-3 {
-                gap: 12px;
-            }
-            .mobile-p-3 {
-                padding: 12px;
-            }
-            .mobile-p-4 {
-                padding: 16px;
-            }
-            .mobile-p-6 {
-                padding: 20px;
-            }
-        }
-    </style>
+    <script src="js/utils/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-primary">
     <!-- Header with Enhanced Branding -->
@@ -146,15 +20,15 @@
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mr-2 sm:mr-3 animate-bounce-subtle">
                         <span class="text-white text-lg sm:text-xl font-bold">🏏</span>
                     </div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 font-primary">
                         cricbuzz11
                     </h1>
                 </div>
                 <!-- Subtitle -->
-                <p class="text-xs sm:text-sm text-gray-600 font-medium">
+                <p class="text-xs sm:text-sm text-gray-600 font-medium font-inter">
                     Team Analysis
                 </p>
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-xs text-gray-500 mt-1 font-inter">
                     AI-Powered Fantasy Cricket Analysis
                 </p>
             </div>
@@ -166,7 +40,7 @@
         
         <!-- Back Button -->
         <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-3 sm:p-4">
-            <button onclick="window.location.href='index.html'" class="w-full bg-gray-100 text-gray-700 py-2.5 sm:py-3 px-4 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300 text-sm sm:text-base">
+            <button onclick="window.location.href='index.html'" class="w-full bg-primary text-white py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-primary/90 transition-all duration-300 text-sm sm:text-base">
                 ← Back to Upload
             </button>
         </section>
@@ -177,21 +51,21 @@
                 <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-warning to-accent rounded-lg flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">👥</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Team Data</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Team Data</h2>
             </div>
             
             <div id="team-info" class="space-y-4 sm:space-y-6">
                 <!-- Players List with Enhanced Styling -->
                 <div>
                     <div class="flex items-center justify-between mb-2 sm:mb-3">
-                        <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Players</h3>
+                        <h3 class="font-semibold text-gray-900 text-sm sm:text-base font-primary">Players</h3>
                         <span id="player-count" class="bg-primary text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold">0</span>
                     </div>
                     <div id="players-list" class="space-y-1.5 sm:space-y-2"></div>
                     
                     <!-- Validate Players Button -->
                     <div class="mt-4 sm:mt-6">
-                        <button id="validate-players-btn" class="w-full bg-warning text-white py-3 sm:py-4 px-4 rounded-xl font-semibold hover:bg-warning/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base">
+                        <button id="validate-players-btn" class="w-full bg-primary text-white py-3 sm:py-4 px-4 rounded font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base">
                             🔍 Validate & Auto-Correct Players
                         </button>
                     </div>
@@ -237,11 +111,11 @@
 
             <!-- Action Buttons with Enhanced Styling -->
             <div class="space-y-2 sm:space-y-3 mt-4 sm:mt-6">
-                <button id="analyze-btn" class="w-full bg-primary text-white py-3 sm:py-4 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base">
+                <button id="analyze-btn" class="w-full bg-primary text-white py-3 sm:py-4 px-4 rounded font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base">
                     📊 Analyze Team Performance
                 </button>
                 
-                <button id="summarize-btn" class="w-full bg-primary text-white py-3 sm:py-4 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base">
+                <button id="summarize-btn" class="w-full bg-primary text-white py-3 sm:py-4 px-4 rounded font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base">
                     ⭐ Get Team Summary & Rating
                 </button>
             </div>
@@ -253,7 +127,7 @@
                 <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-cricket-green to-success rounded-lg flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">📊</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Team Analysis</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Team Analysis</h2>
             </div>
             
             <!-- Analysis Loading State -->
@@ -262,7 +136,7 @@
                     <div class="absolute inset-0 animate-spin rounded-full border-4 border-cricket-green/20 border-t-cricket-green" style="animation-duration: 1s;"></div>
                 </div>
                 <p class="text-cricket-green font-semibold text-sm sm:text-base">Analyzing team performance...</p>
-                <p class="text-xs sm:text-sm text-gray-500 mt-1">Fetching match data & statistics</p>
+                <p class="text-xs sm:text-sm text-gray-500 mt-1 font-inter">Fetching match data & statistics</p>
             </div>
 
             <!-- Analysis Content -->
@@ -360,7 +234,7 @@
                 <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-secondary to-cricket-blue rounded-lg flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">⭐</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Team Summary & Rating</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Team Summary & Rating</h2>
             </div>
 
             <div id="summary-loading" class="hidden text-center py-6 sm:py-8">
@@ -441,7 +315,7 @@
 
                 <!-- Action Buttons -->
                 <div class="flex gap-2 sm:gap-3">
-                    <button id="cancel-selection" class="w-full bg-gray-200 text-gray-700 py-2.5 sm:py-3 px-4 rounded-xl font-semibold hover:bg-gray-300 transition-colors text-sm">
+                    <button id="cancel-selection" class="w-full bg-primary text-white py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-primary/90 transition-colors text-sm">
                         Cancel Selection
                     </button>
                 </div>
@@ -455,5 +329,7 @@
     <script src="js/components/PlayerValidation.js"></script>
     <script src="js/components/TeamAnalysis.js"></script>
     <script src="js/team-analysis.js"></script>
+    <script src="js/components/appFooter.js"></script>
+    <div id="app-footer"></div>
 </body>
 </html> 

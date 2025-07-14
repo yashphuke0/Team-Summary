@@ -6,170 +6,24 @@
     <title>Team Analysis - cricbuzz11</title>
     <link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#009270',
-                        secondary: '#FFFFFF',
-                        background: {
-                            main: '#6B21A8',
-                            gradient: 'linear-gradient(135deg, #6B21A8 0%, #4C1D95 100%)',
-                            cards: '#FFFFFF',
-                            darkCards: '#1F2937'
-                        },
-                        text: {
-                            primary: '#000000',
-                            secondary: '#6B7280',
-                            inverse: '#FFFFFF',
-                            muted: '#9CA3AF'
-                        },
-                        status: {
-                            success: '#10B981',
-                            error: '#EF4444',
-                            warning: '#F59E0B',
-                            info: '#3B82F6',
-                            neutral: '#6B7280'
-                        },
-                        ui: {
-                            border: '#E5E7EB',
-                            divider: '#F3F4F6',
-                            overlay: 'rgba(0, 0, 0, 0.5)',
-                            shadow: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    },
-                    fontFamily: {
-                        'primary': ['Saira', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        'numeric': ['Saira', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'monospace']
-                    },
-                    spacing: {
-                        'xs': '4px',
-                        'sm': '8px',
-                        'md': '16px',
-                        'lg': '24px',
-                        'xl': '32px',
-                        '2xl': '48px',
-                        '3xl': '64px'
-                    },
-                    borderRadius: {
-                        'sm': '8px',
-                        'md': '12px',
-                        'lg': '16px',
-                        'xl': '24px',
-                        'full': '9999px'
-                    },
-                    boxShadow: {
-                        'sm': '0 2px 4px rgba(0, 0, 0, 0.05)',
-                        'md': '0 4px 12px rgba(0, 0, 0, 0.08)',
-                        'lg': '0 8px 24px rgba(0, 0, 0, 0.12)',
-                        'xl': '0 16px 32px rgba(0, 0, 0, 0.16)'
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-in-out',   
-                        'slide-up': 'slideUp 0.3s ease-out',
-                        'bounce-subtle': 'bounceSubtle 2s infinite',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes bounceSubtle {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .cricket-pattern {
-            background-image: 
-                radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 2px),
-                radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2px, transparent 2px);
-            background-size: 100px 100px;
-        }
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(15, 76, 117, 0.1), 0 10px 10px -5px rgba(15, 76, 117, 0.04);
-        }
-        
-        @media (max-width: 640px) {
-            .mobile-padding {
-                padding-left: 16px;
-                padding-right: 16px;
-            }
-            .mobile-text-sm {
-                font-size: 14px;
-            }
-            .mobile-text-xs {
-                font-size: 12px;
-            }
-            .mobile-gap-2 {
-                gap: 8px;
-            }
-            .mobile-gap-3 {
-                gap: 12px;
-            }
-            .mobile-p-3 {
-                padding: 12px;
-            }
-            .mobile-p-4 {
-                padding: 16px;
-            }
-            .mobile-p-6 {
-                padding: 20px;
-            }
-        }
-    </style>
+    <script src="js/utils/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-primary">
     <!-- Header -->
-    <header class="bg-white shadow-cricket border-b border-gray-200 cricket-pattern relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5"></div>
-        <div class="relative w-full max-w-sm mx-auto px-4 py-4 sm:py-6 mobile-padding">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <button onclick="window.location.href='index.html'" class="mr-3 text-gray-600 hover:text-primary transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </button>
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mr-2 sm:mr-3 animate-bounce-subtle">
-                            <span class="text-white text-lg sm:text-xl font-bold">🏏</span>
-                        </div>
-                        <div>
-                            <h1 class="text-lg sm:text-xl font-bold text-gray-900">Team Analysis</h1>
-                            <p class="text-xs text-gray-500">Analyze your teams</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <div id="app-header"></div>
+    <script src="js/components/AppHeader.js"></script>
 
     <!-- Main Content -->
     <main class="w-full max-w-sm mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 mobile-padding">
         
         <!-- Match Info Section -->
-        <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
+        <section class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
             <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-secondary rounded flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">⚡</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Match Details</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Match Details</h2>
             </div>
             
             <div id="match-info" class="space-y-2">
@@ -178,18 +32,18 @@
         </section>
 
         <!-- Match Context Section -->
-        <section id="match-context" class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in hidden">
+        <section id="match-context" class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in hidden">
             <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-info to-primary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-info to-primary rounded flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">📊</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Match Context</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Match Context</h2>
             </div>
             
             <!-- Head to Head -->
             <div class="mb-4">
-                <h3 class="text-sm font-semibold text-gray-700 mb-2">Head to Head</h3>
-                <div id="head-to-head" class="bg-blue-50 rounded-lg p-3 text-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Head to Head</h3>
+                <div id="head-to-head" class="bg-blue-50 rounded p-3 text-sm">
                     <!-- Head to head data will be populated here -->
                 </div>
             </div>
@@ -197,14 +51,14 @@
             <!-- Team Form -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Team A Form</h3>
-                    <div id="team-a-form" class="bg-green-50 rounded-lg p-3 text-sm">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Team A Form</h3>
+                    <div id="team-a-form" class="bg-green-50 rounded p-3 text-sm">
                         <!-- Team A form will be populated here -->
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Team B Form</h3>
-                    <div id="team-b-form" class="bg-green-50 rounded-lg p-3 text-sm">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Team B Form</h3>
+                    <div id="team-b-form" class="bg-green-50 rounded p-3 text-sm">
                         <!-- Team B form will be populated here -->
                     </div>
                 </div>
@@ -212,26 +66,26 @@
 
             <!-- Venue Stats -->
             <div>
-                <h3 class="text-sm font-semibold text-gray-700 mb-2">Venue Stats</h3>
-                <div id="venue-stats" class="bg-purple-50 rounded-lg p-3 text-sm">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Venue Stats</h3>
+                <div id="venue-stats" class="bg-purple-50 rounded p-3 text-sm">
                     <!-- Venue stats will be populated here -->
                 </div>
             </div>
         </section>
 
         <!-- Team Details Section -->
-        <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
+        <section class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
             <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-warning to-primary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-warning to-primary rounded flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">👤</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Team Details</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Team Details</h2>
             </div>
 
             <!-- Team Selector -->
             <div class="mb-4">
                 <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">Select Team</label>
-                <select id="team-selector" class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
+                <select id="team-selector" class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
                     <option value="">Choose a team to configure captain/vice-captain</option>
                 </select>
             </div>
@@ -239,13 +93,13 @@
             <!-- Team Details -->
             <div id="team-details" class="hidden">
                 <div class="mb-4">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Team Players:</h3>
-                    <div id="players-list" class="bg-gray-50 rounded-lg p-3 text-sm space-y-2"></div>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Team Players:</h3>
+                    <div id="players-list" class="bg-gray-50 rounded p-3 text-sm space-y-2"></div>
                 </div>
 
                 <!-- Player Override Section -->
                 <div id="player-override-section" class="mb-4 hidden">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2">⚠️ Player Override Required</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">⚠️ Player Override Required</h3>
                     <p class="text-xs text-gray-600 mb-3">Some players couldn't be matched. Please select the correct players:</p>
                     <div id="override-players-list" class="space-y-2"></div>
                 </div>
@@ -254,13 +108,13 @@
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <div>
                         <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">Captain</label>
-                        <select id="captain-select" class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
+                        <select id="captain-select" class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
                             <option value="">Select Captain</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">Vice-Captain</label>
-                        <select id="vice-captain-select" class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
+                        <select id="vice-captain-select" class="w-full p-2.5 sm:p-3 border-2 border-gray-200 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
                             <option value="">Select Vice-Captain</option>
                         </select>
                     </div>
@@ -271,12 +125,12 @@
         </section>
 
         <!-- Teams Summary Section -->
-        <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
+        <section class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
             <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-info to-primary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-info to-primary rounded flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">📊</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Teams Summary</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Teams Summary</h2>
             </div>
             
             <div id="teams-summary-content" class="space-y-3">
@@ -285,25 +139,25 @@
 
             <!-- Analysis Buttons -->
             <div class="mt-4 space-y-2">
-                <button id="analyze-all-btn" class="w-full bg-gradient-to-r from-purple-600 to-purple-800 text-white py-2.5 sm:py-3 px-4 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-900 transition-all duration-300 shadow-lg text-sm sm:text-base">
+                <button id="analyze-all-btn" class="w-full bg-primary text-white py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg text-sm sm:text-base">
                     🏆 Analyze All Teams
                 </button>
-                <p class="text-xs text-gray-500 text-center">Analyzes all teams with captain/vice-captain selections</p>
+                <p class="text-xs text-gray-500 text-center font-inter">Analyzes all teams with captain/vice-captain selections</p>
                 
-                <button id="compare-teams-btn" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2.5 sm:py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg text-sm sm:text-base">
+                <button id="compare-teams-btn" class="w-full bg-primary text-white py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg text-sm sm:text-base">
                     📈 Compare Teams
                 </button>
-                <p class="text-xs text-gray-500 text-center">Compares multiple teams side by side (requires 2+ teams)</p>
+                <p class="text-xs text-gray-500 text-center font-inter">Compares multiple teams side by side (requires 2+ teams)</p>
             </div>
         </section>
 
         <!-- Analysis Results Section -->
-        <section id="analysis-results" class="bg-white rounded-xl shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in hidden">
+        <section id="analysis-results" class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in hidden">
             <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-success to-primary rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-success to-primary rounded flex items-center justify-center mr-2 sm:mr-3">
                     <span class="text-white text-xs sm:text-sm font-bold">🎯</span>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900">Analysis Results</h2>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Analysis Results</h2>
             </div>
             
             <div id="analysis-content" class="space-y-4">
@@ -313,7 +167,7 @@
     </main>
 
     <!-- Toast Messages -->
-    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-sm mx-auto bg-red-600 text-white p-3 sm:p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
+    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-sm mx-auto bg-red-600 text-white p-3 sm:p-4 rounded shadow-lg transform translate-y-full transition-all duration-300 z-50">
         <div class="flex items-center">
             <div class="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 sm:mr-3">
                 <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -324,7 +178,7 @@
         </div>
     </div>
 
-    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-sm mx-auto bg-green-600 text-white p-3 sm:p-4 rounded-xl shadow-lg transform translate-y-full transition-all duration-300 z-50">
+    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-sm mx-auto bg-green-600 text-white p-3 sm:p-4 rounded shadow-lg transform translate-y-full transition-all duration-300 z-50">
         <div class="flex items-center">
             <div class="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 sm:mr-3">
                 <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -337,7 +191,7 @@
 
     <!-- Player Override Modal -->
     <div id="player-override-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[85vh] overflow-hidden animate-scale-in">
+        <div class="bg-white rounded shadow-2xl w-full max-w-sm max-h-[85vh] overflow-hidden animate-scale-in">
             <!-- Modal Header -->
             <div class="bg-gradient-to-r from-warning to-primary text-white p-3 sm:p-4">
                 <div class="flex items-center justify-between">
@@ -348,7 +202,7 @@
                         </svg>
                     </button>
                 </div>
-                <p class="text-white/90 text-xs sm:text-sm mt-1">Select the correct player from database</p>
+                <p class="text-white/90 text-xs sm:text-sm mt-1 font-inter">Select the correct player from database</p>
             </div>
 
             <!-- Modal Content -->
@@ -359,10 +213,10 @@
                 
                 <!-- Action Buttons -->
                 <div class="flex gap-2 sm:gap-3 mt-4">
-                    <button id="save-override" class="flex-1 bg-primary text-white py-2.5 sm:py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm">
+                    <button id="save-override" class="flex-1 bg-primary text-white py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-primary/90 transition-colors text-sm">
                         Save Changes
                     </button>
-                    <button id="cancel-override" class="flex-1 bg-gray-200 text-gray-700 py-2.5 sm:py-3 px-4 rounded-xl font-semibold hover:bg-gray-300 transition-colors text-sm">
+                    <button id="cancel-override" class="flex-1 bg-gray-200 text-gray-700 py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-gray-300 transition-colors text-sm">
                         Cancel
                     </button>
                 </div>
@@ -376,5 +230,7 @@
     <script src="js/components/PlayerValidation.js"></script>
     <script src="js/components/TeamAnalysis.js"></script>
     <script src="js/team-analysis-page.js"></script>
+    <script src="js/components/appFooter.js"></script>
+    <div id="app-footer"></div>
 </body>
 </html> 
