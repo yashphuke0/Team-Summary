@@ -97,21 +97,59 @@ class TeamAnalysisPage {
         const matchInfo = document.getElementById('match-info');
         
         if (this.currentMatchDetails) {
+            // Get team logo data
+            const teamA = TeamAnalysisPage.TEAM_LOGOS[this.currentMatchDetails.teamA] || { 
+                short: this.currentMatchDetails.teamA, 
+                image: null, 
+                fallbackColor: 'bg-gray-500' 
+            };
+            const teamB = TeamAnalysisPage.TEAM_LOGOS[this.currentMatchDetails.teamB] || { 
+                short: this.currentMatchDetails.teamB, 
+                image: null, 
+                fallbackColor: 'bg-gray-500' 
+            };
+            
             matchInfo.innerHTML = `
-                <div class="flex justify-between items-center p-3 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg">
+                <div class="flex justify-between items-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg">
                     <div class="text-center flex-1">
-                        <div class="font-bold text-gray-800 text-sm">${this.currentMatchDetails.teamA}</div>
-                        <div class="text-xs text-gray-600">Team A</div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-lg overflow-hidden bg-white">
+                                ${teamA.image ? 
+                                    `<img src="${teamA.image}" alt="${teamA.short}" class="w-full h-full object-contain p-1" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                     <div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center" style="display: none;">
+                                         <span class="font-bold text-lg text-white">${teamA.short}</span>
+                                     </div>` :
+                                    `<div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center">
+                                         <span class="font-bold text-lg text-white">${teamA.short}</span>
+                                     </div>`
+                                }
+                            </div>
+                            <div class="font-bold text-gray-800 text-sm">${this.currentMatchDetails.teamA}</div>
+                        </div>
                     </div>
                     <div class="mx-4">
-                        <div class="bg-primary text-white px-3 py-1 rounded-full text-xs font-bold">VS</div>
+                        <div class="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">VS</div>
                     </div>
                     <div class="text-center flex-1">
-                        <div class="font-bold text-gray-800 text-sm">${this.currentMatchDetails.teamB}</div>
-                        <div class="text-xs text-gray-600">Team B</div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-lg overflow-hidden bg-white">
+                                ${teamB.image ? 
+                                    `<img src="${teamB.image}" alt="${teamB.short}" class="w-full h-full object-contain p-1" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                     <div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center" style="display: none;">
+                                         <span class="font-bold text-lg text-white">${teamB.short}</span>
+                                     </div>` :
+                                    `<div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center">
+                                         <span class="font-bold text-lg text-white">${teamB.short}</span>
+                                     </div>`
+                                }
+                            </div>
+                            <div class="font-bold text-gray-800 text-sm">${this.currentMatchDetails.teamB}</div>
+                        </div>
                     </div>
                 </div>
-                <div class="text-center mt-2">
+                <div class="text-center mt-3">
                     <div class="text-sm text-gray-600">Match Date: ${this.currentMatchDetails.matchDate}</div>
                 </div>
             `;
@@ -142,6 +180,60 @@ class TeamAnalysisPage {
         // Add more as needed
     };
 
+    // Team logo and external URL mapping
+    static TEAM_LOGOS = {
+        'Chennai Super Kings': { 
+            short: 'CSK', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/okceh51487601098.png/medium', 
+            fallbackColor: 'bg-yellow-500' 
+        },
+        'Mumbai Indians': { 
+            short: 'MI', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/l40j8p1487678631.png/medium', // Replace with actual MI URL
+            fallbackColor: 'bg-blue-600' 
+        },
+        'Royal Challengers Bengaluru': { 
+            short: 'RCB', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/kynj5v1588331757.png/medium', // Replace with actual RCB URL
+            fallbackColor: 'bg-red-600' 
+        },
+        'Sunrisers Hyderabad': { 
+            short: 'SRH', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/sc7m161487419327.png/medium', // Replace with actual SRH URL
+            fallbackColor: 'bg-orange-500' 
+        },
+        'Rajasthan Royals': { 
+            short: 'RR', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/lehnfw1487601864.png/medium', // Replace with actual RR URL
+            fallbackColor: 'bg-pink-500' 
+        },
+        'Delhi Capitals': { 
+            short: 'DC', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/dg4g0z1587334054.png/medium', // Replace with actual DC URL
+            fallbackColor: 'bg-blue-500' 
+        },
+        'Kolkata Knight Riders': { 
+            short: 'KKR', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/ows99r1487678296.png/medium', // Replace with actual KKR URL
+            fallbackColor: 'bg-purple-600' 
+        },
+        'Punjab Kings': { 
+            short: 'PBKS', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/r1tcie1630697821.png/medium', // Replace with actual PBKS URL
+            fallbackColor: 'bg-red-500' 
+        },
+        'Lucknow Super Giants': { 
+            short: 'LSG', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/4tzmfa1647445839.png/medium', // Replace with actual LSG URL
+            fallbackColor: 'bg-green-600' 
+        },
+        'Gujarat Titans': { 
+            short: 'GT', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/6qw4r71654174508.png/medium', // Replace with actual GT URL
+            fallbackColor: 'bg-blue-400' 
+        },
+    };
+
     async loadMatchContext() {
         if (!this.currentMatchDetails) return;
         try {
@@ -160,39 +252,136 @@ class TeamAnalysisPage {
             const teamAShort = getShort(this.currentMatchDetails.teamA);
             const teamBShort = getShort(this.currentMatchDetails.teamB);
 
-            // --- Recent Form ---
-            document.getElementById('recent-form-team-a-name').textContent = teamAShort;
-            document.getElementById('recent-form-team-b-name').textContent = teamBShort;
+            // Get team logo data
+            const teamA = TeamAnalysisPage.TEAM_LOGOS[this.currentMatchDetails.teamA] || { 
+                short: teamAShort, 
+                image: null, 
+                fallbackColor: 'bg-gray-500' 
+            };
+            const teamB = TeamAnalysisPage.TEAM_LOGOS[this.currentMatchDetails.teamB] || { 
+                short: teamBShort, 
+                image: null, 
+                fallbackColor: 'bg-gray-500' 
+            };
+
+            // --- Recent Form with Team Logos and Colored Squares ---
             if (teamFormData.success && teamFormData.data) {
-                const teamA = teamFormData.data.teamA;
-                const teamB = teamFormData.data.teamB;
-                // Calculate wins if not provided or 0
-                let teamAWins = (teamA && teamA.wins) ? teamA.wins : (teamA && teamA.matches ? teamA.matches.filter(m => m.result === 'Win').length : null);
-                let teamBWins = (teamB && teamB.wins) ? teamB.wins : (teamB && teamB.matches ? teamB.matches.filter(m => m.result === 'Win').length : null);
-                // Show N/A if no data
-                document.getElementById('recent-form-team-a-wins').textContent = (teamAWins !== null && teamAWins !== undefined) ? `${teamAWins}/5 wins` : 'N/A';
-                document.getElementById('recent-form-team-b-wins').textContent = (teamBWins !== null && teamBWins !== undefined) ? `${teamBWins}/5 wins` : 'N/A';
-                // Form sequence
-                if (teamA && teamA.matches) {
-                    const formSeqHtml = teamA.matches.map(m => {
-                        if (m.result === 'Win') return '<span class="text-green-600 font-bold">W</span>';
-                        if (m.result === 'Loss') return '<span class="text-red-600 font-bold">L</span>';
-                        return '<span>' + (m.result ? m.result[0] : '-') + '</span>';
-                    }).join('<span class="mx-0.5 text-gray-400">-</span>');
-                    document.getElementById('recent-form-team-a-seq').innerHTML = formSeqHtml;
+                const teamAData = teamFormData.data.teamA;
+                const teamBData = teamFormData.data.teamB;
+                
+                // Calculate wins
+                let teamAWins = (teamAData && teamAData.wins) ? teamAData.wins : (teamAData && teamAData.matches ? teamAData.matches.filter(m => m.result === 'Win').length : 0);
+                let teamBWins = (teamBData && teamBData.wins) ? teamBData.wins : (teamBData && teamBData.matches ? teamBData.matches.filter(m => m.result === 'Win').length : 0);
+                
+                // Create form squares for Team A
+                let teamAFormSquares = '';
+                if (teamAData && teamAData.matches) {
+                    teamAFormSquares = teamAData.matches.map(m => {
+                        if (m.result === 'Win') {
+                            return '<div class="w-6 h-6 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>';
+                        } else if (m.result === 'Loss') {
+                            return '<div class="w-6 h-6 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>';
+        } else {
+                            return '<div class="w-6 h-6 bg-gray-100 rounded flex items-center justify-center"><span class="text-gray-500 font-bold text-xs">-</span></div>';
+                        }
+                    }).join('');
                 }
-                if (teamB && teamB.matches) {
-                    const formSeqHtml = teamB.matches.map(m => {
-                        if (m.result === 'Win') return '<span class="text-green-600 font-bold">W</span>';
-                        if (m.result === 'Loss') return '<span class="text-red-600 font-bold">L</span>';
-                        return '<span>' + (m.result ? m.result[0] : '-') + '</span>';
-                    }).join('<span class="mx-0.5 text-gray-400">-</span>');
-                    document.getElementById('recent-form-team-b-seq').innerHTML = formSeqHtml;
+                
+                // Create form squares for Team B
+                let teamBFormSquares = '';
+                if (teamBData && teamBData.matches) {
+                    teamBFormSquares = teamBData.matches.map(m => {
+                        if (m.result === 'Win') {
+                            return '<div class="w-6 h-6 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>';
+                        } else if (m.result === 'Loss') {
+                            return '<div class="w-6 h-6 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>';
+            } else {
+                            return '<div class="w-6 h-6 bg-gray-100 rounded flex items-center justify-center"><span class="text-gray-500 font-bold text-xs">-</span></div>';
+                        }
+                    }).join('');
+                }
+
+                // Update the recent form display with logos and colored squares
+                const recentFormContainer = document.querySelector('.bg-gray-50.rounded-lg.p-2');
+                if (recentFormContainer) {
+                    recentFormContainer.innerHTML = `
+                        <div class="flex items-center mb-2">
+                            <span class="font-bold text-sm">Recent Form (Last 5 Matches)</span>
+                        </div>
+                        
+                        <!-- Team A Row -->
+                        <div class="flex items-center justify-between text-xs font-medium mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-sm">
+                                    ${teamA.image ? 
+                                        `<img src="${teamA.image}" alt="${teamA.short}" class="w-full h-full object-contain p-0.5" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                         <div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center" style="display: none;">
+                                             <span class="font-bold text-xs text-white">${teamA.short}</span>
+                                         </div>` :
+                                        `<div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center">
+                                             <span class="font-bold text-xs text-white">${teamA.short}</span>
+                                         </div>`
+                                    }
+                                </div>
+                                <div class="font-semibold text-xs">${teamAShort}</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="font-semibold text-xs">${teamBShort}</div>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-sm">
+                                    ${teamB.image ? 
+                                        `<img src="${teamB.image}" alt="${teamB.short}" class="w-full h-full object-contain p-0.5" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                         <div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center" style="display: none;">
+                                             <span class="font-bold text-xs text-white">${teamB.short}</span>
+                                         </div>` :
+                                        `<div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center">
+                                             <span class="font-bold text-xs text-white">${teamB.short}</span>
+                                         </div>`
+                                    }
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- Team B Row -->
+                        <div class="flex items-center justify-between text-xs font-medium">
+                            
+                            
+                            <div class="flex gap-0.5">
+                                ${teamAFormSquares || '<div class="text-gray-500 text-xs">No recent matches</div>'}
+                            </div>
+                            <div class="flex gap-0.5">
+                                ${teamBFormSquares || '<div class="text-gray-500 text-xs">No recent matches</div>'}
+                            </div>
+                        </div>
+                        
+                        <!-- Win counts -->
+                        <div class="flex justify-between mt-2">
+                            <div class="text-gray-600 text-xs">${teamAWins}/5 wins</div>
+                            <div class="text-gray-600 text-xs">${teamBWins}/5 wins</div>
+                        </div>
+                        
+                        <div class="text-center mt-2">
+                            <div class="text-xs text-gray-500 italic">Most recent matches from left to right</div>
+                        </div>
+                    `;
                 }
             } else {
-                document.getElementById('recent-form-team-a-wins').textContent = 'N/A';
-                document.getElementById('recent-form-team-b-wins').textContent = 'N/A';
+                // Fallback if no form data
+                const recentFormContainer = document.querySelector('.bg-gray-50.rounded-lg.p-2');
+                if (recentFormContainer) {
+                    recentFormContainer.innerHTML = `
+                        <div class="flex items-center mb-2">
+                            <span class="font-bold text-sm">Recent Form (Last 5 Matches)</span>
+                        </div>
+                        <div class="text-center text-gray-500 text-sm py-4">
+                            No recent form data available
+                        </div>
+                    `;
+                }
             }
+
             // --- Head-to-Head ---
             if (headToHeadData.success && headToHeadData.data) {
                 const teamAWins = headToHeadData.data.teamAWins;
@@ -239,8 +428,6 @@ class TeamAnalysisPage {
 
             // Set font-family: inter for all inner context text
             [
-                'recent-form-team-a-name', 'recent-form-team-b-name', 'recent-form-team-a-seq', 'recent-form-team-b-seq',
-                'recent-form-team-a-wins', 'recent-form-team-b-wins',
                 'h2h-team-a-wins', 'h2h-team-b-wins', 'h2h-total-matches',
                 'h2h-team-a-name', 'h2h-team-b-name', 'h2h-team-a-rate', 'h2h-team-b-rate',
                 'venue-name', 'venue-location', 'venue-pitch-type',
