@@ -321,9 +321,9 @@ class EnhancedCricketAnalyzerApp {
         // Show success message and redirect
         this.components.toast.showSuccess(`✅ Successfully processed ${this.currentTeams.length} team(s). Redirecting to analysis...`);
         
-        // Redirect to the team analysis page
+        // Redirect to the new tabbed team analysis page
         setTimeout(() => {
-            window.location.href = 'team-analysis-enhanced.html';
+            window.location.href = 'team-analysis-tabbed.html';
         }, 1500);
     }
 
