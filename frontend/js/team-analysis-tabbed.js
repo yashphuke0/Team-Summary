@@ -130,12 +130,7 @@ class TabbedTeamAnalysisApp {
                 content.classList.add('active');
                 console.log(`Made ${contentId} visible`);
                 
-                // Immediately populate data for team analysis tab
-                if (contentId === 'team-analysis-content' && this.currentMatchDetails) {
-                    console.log('Immediately populating team analysis data...');
-                    this.populateTeamFormData();
-                    this.populateHeadToHeadData();
-                }
+                // Data will be loaded through loadTeamAnalysisData() when tab is activated
             } else {
                 content.classList.add('hidden');
                 content.classList.remove('active');
@@ -221,24 +216,61 @@ class TabbedTeamAnalysisApp {
         if (!this.currentMatchDetails) return;
 
         const matchInfo = document.getElementById('match-info');
+        
+        // Get team logo data
+        const teamA = TabbedTeamAnalysisApp.TEAM_LOGOS[this.currentMatchDetails.teamA] || { 
+            short: this.currentMatchDetails.teamA, 
+            image: null, 
+            fallbackColor: 'bg-gray-500' 
+        };
+        const teamB = TabbedTeamAnalysisApp.TEAM_LOGOS[this.currentMatchDetails.teamB] || { 
+            short: this.currentMatchDetails.teamB, 
+            image: null, 
+            fallbackColor: 'bg-gray-500' 
+        };
+        
         matchInfo.innerHTML = `
-            <div class="grid grid-cols-2 gap-4 text-center">
-                <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                    <div class="font-semibold text-sm text-gray-900">${this.currentMatchDetails.teamA}</div>
-                    <div class="text-xs text-gray-500">Team A</div>
+            <div class="flex justify-between items-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg">
+                <div class="text-center flex-1">
+                    <div class="flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-lg overflow-hidden bg-white">
+                            ${teamA.image ? 
+                                `<img src="${teamA.image}" alt="${teamA.short}" class="w-full h-full object-contain p-1" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                 <div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center" style="display: none;">
+                                     <span class="font-bold text-lg text-white">${teamA.short}</span>
+                                 </div>` :
+                                `<div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center">
+                                     <span class="font-bold text-lg text-white">${teamA.short}</span>
+                                 </div>`
+                            }
+                        </div>
+                        <div class="font-bold text-gray-800 text-sm">${teamA.short}</div>
+                    </div>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                    <div class="font-semibold text-sm text-gray-900">${this.currentMatchDetails.teamB}</div>
-                    <div class="text-xs text-gray-500">Team B</div>
+                <div class="mx-4 flex items-center">
+                    <div class="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">VS</div>
+                </div>
+                <div class="text-center flex-1">
+                    <div class="flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-lg overflow-hidden bg-white">
+                            ${teamB.image ? 
+                                `<img src="${teamB.image}" alt="${teamB.short}" class="w-full h-full object-contain p-1" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                 <div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center" style="display: none;">
+                                     <span class="font-bold text-lg text-white">${teamB.short}</span>
+                                 </div>` :
+                                `<div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center">
+                                     <span class="font-bold text-lg text-white">${teamB.short}</span>
+                                 </div>`
+                            }
+                        </div>
+                        <div class="font-bold text-gray-800 text-sm">${teamB.short}</div>
+                    </div>
                 </div>
             </div>
             <div class="text-center mt-3">
-                <div class="text-sm font-medium text-gray-700">${new Date(this.currentMatchDetails.matchDate).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                })}</div>
+                <div class="text-sm text-gray-600">Match Date: ${this.currentMatchDetails.matchDate}</div>
             </div>
         `;
     }
@@ -370,7 +402,7 @@ class TabbedTeamAnalysisApp {
     }
 
     async loadTeamAnalysisData() {
-        console.log('Loading additional team analysis data...');
+        console.log('Loading additional team analysis data from API...');
         
         if (!this.currentMatchDetails) {
             console.log('No match details available');
@@ -378,11 +410,16 @@ class TabbedTeamAnalysisApp {
         }
 
         try {
-            // Populate the data directly without showing loading state
-            // since the data is already available
-            this.populateTeamFormData();
-            this.populateHeadToHeadData();
-            console.log('Additional team analysis data loaded successfully');
+            // Fetch real data from APIs
+            const [teamFormData, headToHeadData] = await Promise.all([
+                this.fetchTeamRecentForm(),
+                this.fetchHeadToHead()
+            ]);
+
+            // Populate with real data
+            this.populateTeamFormData(teamFormData);
+            this.populateHeadToHeadData(headToHeadData);
+            console.log('Additional team analysis data loaded successfully from API');
 
         } catch (error) {
             console.error('Error loading additional team analysis data:', error);
@@ -390,102 +427,225 @@ class TabbedTeamAnalysisApp {
         }
     }
     
-    populateTeamFormData() {
-        console.log('Populating team form data directly...');
+    populateTeamFormData(data) {
+        console.log('Populating team form data with real API data...');
         
-        // Debug: Check DOM state
-        console.log('Current DOM state:');
-        console.log('All elements with "recent-form" in ID:', document.querySelectorAll('[id*="recent-form"]').length);
-        console.log('All elements with "h2h" in ID:', document.querySelectorAll('[id*="h2h"]').length);
-        
-        // Check if team analysis content exists
-        const teamAnalysisContent = document.getElementById('team-analysis-content');
-        console.log('Team analysis content exists:', !!teamAnalysisContent);
-        if (teamAnalysisContent) {
-            console.log('Team analysis content classes:', teamAnalysisContent.className);
-            console.log('Team analysis content innerHTML length:', teamAnalysisContent.innerHTML.length);
-        }
-        
-        // Direct element access and population
-        const elements = {
-            'recent-form-team-a-name': this.currentMatchDetails.teamA,
-            'recent-form-team-a-seq': 'W-L-W-D-L',
-            'recent-form-team-a-wins': '3/5 wins',
-            'recent-form-team-b-name': this.currentMatchDetails.teamB,
-            'recent-form-team-b-seq': 'L-W-L-W-D',
-            'recent-form-team-b-wins': '2/5 wins'
+        if (!this.currentMatchDetails) return;
+
+        // Helper to get short name
+        const getShort = (name) => TabbedTeamAnalysisApp.TEAM_SHORT_NAMES[name] || name;
+        const teamAShort = getShort(this.currentMatchDetails.teamA);
+        const teamBShort = getShort(this.currentMatchDetails.teamB);
+
+        // Get team logo data
+        const teamA = TabbedTeamAnalysisApp.TEAM_LOGOS[this.currentMatchDetails.teamA] || { 
+            short: teamAShort, 
+            image: null, 
+            fallbackColor: 'bg-gray-500' 
         };
-        
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-                console.log(`Populated ${id}: ${value}`);
-                // Debug: Check if element is visible
-                const computedStyle = window.getComputedStyle(element);
-                console.log(`Element ${id} visibility:`, {
-                    display: computedStyle.display,
-                    visibility: computedStyle.visibility,
-                    opacity: computedStyle.opacity,
-                    textContent: element.textContent,
-                    innerHTML: element.innerHTML
-                });
-            } else {
-                console.error(`Element not found: ${id}`);
-                // Try to find it in the entire document
-                const allElements = document.querySelectorAll(`[id="${id}"]`);
-                console.log(`Elements with ID "${id}" found:`, allElements.length);
+        const teamB = TabbedTeamAnalysisApp.TEAM_LOGOS[this.currentMatchDetails.teamB] || { 
+            short: teamBShort, 
+            image: null, 
+            fallbackColor: 'bg-gray-500' 
+        };
+
+        // Use real API data or fallback to sample data
+        let teamAFormSquares = '';
+        let teamBFormSquares = '';
+        let teamAWins = 0;
+        let teamBWins = 0;
+
+        if (data && data.success && data.data) {
+            const teamAData = data.data.teamA;
+            const teamBData = data.data.teamB;
+            
+            // Create form squares for Team A
+            if (teamAData && teamAData.matches) {
+                teamAFormSquares = teamAData.matches.map(m => {
+                    if (m.result === 'Win') {
+                        return '<div class="w-4 h-4 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>';
+                    } else if (m.result === 'Loss') {
+                        return '<div class="w-4 h-4 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>';
+                    } else {
+                        return '<div class="w-4 h-4 bg-gray-100 rounded flex items-center justify-center"><span class="text-gray-500 font-bold text-xs">-</span></div>';
+                    }
+                }).join('');
+                teamAWins = teamAData.matches.filter(m => m.result === 'Win').length;
             }
-        });
+            
+            // Create form squares for Team B
+            if (teamBData && teamBData.matches) {
+                teamBFormSquares = teamBData.matches.map(m => {
+                    if (m.result === 'Win') {
+                        return '<div class="w-4 h-4 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>';
+                    } else if (m.result === 'Loss') {
+                        return '<div class="w-4 h-4 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>';
+                    } else {
+                        return '<div class="w-4 h-4 bg-gray-100 rounded flex items-center justify-center"><span class="text-gray-500 font-bold text-xs">-</span></div>';
+                    }
+                }).join('');
+                teamBWins = teamBData.matches.filter(m => m.result === 'Win').length;
+            }
+        } else {
+            // Fallback to sample data if API fails
+            teamAFormSquares = '<div class="w-4 h-4 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>' +
+                              '<div class="w-4 h-4 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>' +
+                              '<div class="w-4 h-4 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>' +
+                              '<div class="w-4 h-4 bg-gray-100 rounded flex items-center justify-center"><span class="text-gray-500 font-bold text-xs">-</span></div>' +
+                              '<div class="w-4 h-4 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>';
+
+            teamBFormSquares = '<div class="w-4 h-4 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>' +
+                              '<div class="w-4 h-4 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>' +
+                              '<div class="w-4 h-4 bg-red-100 rounded flex items-center justify-center"><span class="text-red-600 font-bold text-xs">L</span></div>' +
+                              '<div class="w-4 h-4 bg-green-200 rounded flex items-center justify-center"><span class="text-green-600 font-bold text-xs">W</span></div>' +
+                              '<div class="w-4 h-4 bg-gray-100 rounded flex items-center justify-center"><span class="text-gray-500 font-bold text-xs">-</span></div>';
+
+            teamAWins = 3;
+            teamBWins = 2;
+        }
+
+        // Find the recent form container specifically within the team analysis tab
+        const teamAnalysisContent = document.getElementById('team-analysis-content');
+        const recentFormContainer = teamAnalysisContent ? teamAnalysisContent.querySelector('.bg-gray-50.rounded-lg.p-3.border.border-gray-100') : null;
+        
+        if (recentFormContainer) {
+            recentFormContainer.innerHTML = `
+                <div class="flex items-center mb-2">
+                    <span class="font-bold text-sm text-gray-900">Recent Form (Last 5 Matches)</span>
+                </div>
+                
+                <!-- Team A Row -->
+                <div class="flex items-center justify-between text-xs font-medium mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-sm">
+                            ${teamA.image ? 
+                                `<img src="${teamA.image}" alt="${teamA.short}" class="w-full h-full object-contain p-0.5" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                 <div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center" style="display: none;">
+                                     <span class="font-bold text-xs text-white">${teamA.short}</span>
+                                 </div>` :
+                                `<div class="w-full h-full ${teamA.fallbackColor} flex items-center justify-center">
+                                     <span class="font-bold text-xs text-white">${teamA.short}</span>
+                                 </div>`
+                            }
+                        </div>
+                        <div class="font-semibold text-xs">${teamAShort}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="font-semibold text-xs">${teamBShort}</div>
+                        <div class="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-sm">
+                            ${teamB.image ? 
+                                `<img src="${teamB.image}" alt="${teamB.short}" class="w-full h-full object-contain p-0.5" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                 <div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center" style="display: none;">
+                                     <span class="font-bold text-xs text-white">${teamB.short}</span>
+                                 </div>` :
+                                `<div class="w-full h-full ${teamB.fallbackColor} flex items-center justify-center">
+                                     <span class="font-bold text-xs text-white">${teamB.short}</span>
+                                 </div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team B Row -->
+                <div class="flex items-center justify-between text-xs font-medium">
+                    <div class="flex gap-1">
+                        ${teamAFormSquares}
+                    </div>
+                    <div class="flex gap-1">
+                        ${teamBFormSquares}
+                    </div>
+                </div>
+                
+                <!-- Win counts -->
+                <div class="flex justify-between mt-2">
+                    <div class="text-gray-600 text-xs">${teamAWins}/5 wins</div>
+                    <div class="text-gray-600 text-xs">${teamBWins}/5 wins</div>
+                </div>
+                
+                <div class="text-center mt-2">
+                    <div class="text-xs text-gray-500 italic">Most recent matches from left to right</div>
+                </div>
+            `;
+            console.log('Enhanced team form data displayed successfully');
+        } else {
+            console.error('Recent form container not found');
+        }
     }
     
-    populateHeadToHeadData() {
-        console.log('Populating head-to-head data directly...');
-        
-        // Debug: Check DOM state
-        console.log('Current DOM state for head-to-head:');
-        console.log('All elements with "h2h" in ID:', document.querySelectorAll('[id*="h2h"]').length);
-        
-        // Check if team analysis content exists
-        const teamAnalysisContent = document.getElementById('team-analysis-content');
-        console.log('Team analysis content exists for h2h:', !!teamAnalysisContent);
-        if (teamAnalysisContent) {
-            console.log('Team analysis content classes for h2h:', teamAnalysisContent.className);
-            console.log('Team analysis content innerHTML length for h2h:', teamAnalysisContent.innerHTML.length);
-        }
-        
-        // Direct element access and population
-        const elements = {
-            'h2h-team-a-name': this.currentMatchDetails.teamA,
-            'h2h-team-b-name': this.currentMatchDetails.teamB,
-            'h2h-total-matches': '15',
-            'h2h-team-a-wins': '8',
-            'h2h-team-b-wins': '7',
-            'h2h-team-a-rate': '53%',
-            'h2h-team-b-rate': '47%'
-        };
-        
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-                console.log(`Populated ${id}: ${value}`);
-                // Debug: Check if element is visible
-                const computedStyle = window.getComputedStyle(element);
-                console.log(`Element ${id} visibility:`, {
-                    display: computedStyle.display,
-                    visibility: computedStyle.visibility,
-                    opacity: computedStyle.opacity,
-                    textContent: element.textContent,
-                    innerHTML: element.innerHTML
-                });
-            } else {
-                console.error(`Element not found: ${id}`);
-                // Try to find it in the entire document
-                const allElements = document.querySelectorAll(`[id="${id}"]`);
-                console.log(`Elements with ID "${id}" found:`, allElements.length);
+    populateHeadToHeadData(data) {
+        console.log('Populating head-to-head data with real API data...');
+        if (!this.currentMatchDetails) return;
+
+        // Helper to get short name
+        const getShort = (name) => TabbedTeamAnalysisApp.TEAM_SHORT_NAMES[name] || name;
+        const teamAShort = getShort(this.currentMatchDetails.teamA);
+        const teamBShort = getShort(this.currentMatchDetails.teamB);
+
+        // Use real API data or fallback to sample data
+        let teamAWins = 0;
+        let teamBWins = 0;
+        let totalMatches = 0;
+        let teamAWinRate = 0;
+        let teamBWinRate = 0;
+
+        if (data && data.success && data.data) {
+            teamAWins = data.data.teamAWins || 0;
+            teamBWins = data.data.teamBWins || 0;
+            totalMatches = data.data.totalMatches || 0;
+            
+            // Calculate win rates
+            if (totalMatches > 0) {
+                teamAWinRate = Math.round((teamAWins / totalMatches) * 100);
+                teamBWinRate = Math.round((teamBWins / totalMatches) * 100);
             }
-        });
+        } else {
+            // Fallback to sample data if API fails
+            teamAWins = 8;
+            teamBWins = 7;
+            totalMatches = 15;
+            teamAWinRate = Math.round((teamAWins / totalMatches) * 100);
+            teamBWinRate = Math.round((teamBWins / totalMatches) * 100);
+        }
+
+        // Find the head-to-head container specifically within the team analysis tab
+        const teamAnalysisContent = document.getElementById('team-analysis-content');
+        const headToHeadContainers = teamAnalysisContent ? teamAnalysisContent.querySelectorAll('.bg-gray-50.rounded-lg.p-3.border.border-gray-100') : [];
+        const headToHeadContainer = headToHeadContainers[1]; // Second container is head-to-head
+        
+        if (headToHeadContainer) {
+            headToHeadContainer.innerHTML = `
+                <div class="flex items-center mb-2">
+                    <span class="font-bold text-sm text-gray-900">Head-to-Head Record</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 items-end text-center text-xs font-semibold mb-1">
+                    <div class="flex flex-col gap-0.5 items-center border-r border-gray-200 pr-2">
+                        <div class="text-xs text-gray-700 font-bold mb-1">${teamAShort}</div>
+                        <div class="text-lg text-primary font-bold">${teamAWins}</div>
+                        <div class="text-xs text-gray-700">Wins</div>
+                    </div>
+                    <div class="flex flex-col gap-0.5 items-center">
+                        <div class="text-xs text-gray-700 font-bold mb-1">Matches</div>
+                        <div class="text-lg text-gray-700 font-bold">${totalMatches}</div>
+                        <div class="text-xs text-gray-700">Total</div>
+                    </div>
+                    <div class="flex flex-col gap-0.5 items-center border-l border-gray-200 pl-2">
+                        <div class="text-xs text-gray-700 font-bold mb-1">${teamBShort}</div>
+                        <div class="text-lg text-primary font-bold">${teamBWins}</div>
+                        <div class="text-xs text-gray-700">Wins</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-xs mt-1 text-center">
+                    <div class="text-green-700 text-xs">${teamAWinRate}% win rate</div>
+                    <div></div>
+                    <div class="text-orange-700 text-xs">${teamBWinRate}% win rate</div>
+                </div>
+            `;
+            console.log('Compact head-to-head data displayed successfully');
+        } else {
+            console.error('Head-to-head container not found');
+        }
     }
 
     async fetchTeamRecentForm() {
@@ -501,7 +661,7 @@ class TabbedTeamAnalysisApp {
 
         if (!response.ok) throw new Error('Failed to fetch team form data');
         const result = await response.json();
-        return result.success ? result.data : result;
+        return result; // Return the full result object
     }
 
     async fetchHeadToHead() {
@@ -517,183 +677,18 @@ class TabbedTeamAnalysisApp {
 
         if (!response.ok) throw new Error('Failed to fetch head-to-head data');
         const result = await response.json();
-        return result.success ? result.data : result;
+        return result; // Return the full result object
     }
 
-    displayTeamFormData(data) {
-        console.log('Displaying team form data...');
-        
-        try {
-            // Ensure the team analysis tab is visible
-            const teamAnalysisContent = document.getElementById('team-analysis-content');
-            if (teamAnalysisContent) {
-                teamAnalysisContent.classList.remove('hidden');
-                teamAnalysisContent.classList.add('active');
-            }
-            
-            // For now, show placeholder data since team form service might not be fully implemented
-            // We'll show sample data to demonstrate the interface
-            const teamANameElement = document.getElementById('recent-form-team-a-name');
-            const teamASeqElement = document.getElementById('recent-form-team-a-seq');
-            const teamAWinsElement = document.getElementById('recent-form-team-a-wins');
-            
-            const teamBNameElement = document.getElementById('recent-form-team-b-name');
-            const teamBSeqElement = document.getElementById('recent-form-team-b-seq');
-            const teamBWinsElement = document.getElementById('recent-form-team-b-wins');
-            
-            if (teamANameElement && teamASeqElement && teamAWinsElement && 
-                teamBNameElement && teamBSeqElement && teamBWinsElement) {
-                
-                teamANameElement.textContent = this.currentMatchDetails.teamA;
-                teamASeqElement.innerHTML = '<div class="font-mono font-bold text-base mb-1 text-blue-700">W-L-W-D-L</div>';
-                teamAWinsElement.textContent = '3/5 wins';
-                
-                teamBNameElement.textContent = this.currentMatchDetails.teamB;
-                teamBSeqElement.innerHTML = '<div class="font-mono font-bold text-base mb-1 text-blue-700">L-W-L-W-D</div>';
-                teamBWinsElement.textContent = '2/5 wins';
-                
-                console.log('Team form data displayed successfully');
-            } else {
-                console.error('Some team form elements not found');
-            }
-        } catch (error) {
-            console.error('Error displaying team form data:', error);
-        }
-    }
 
-    displayHeadToHeadData(data) {
-        console.log('Displaying head-to-head data...');
-        
-        try {
-            // Try multiple approaches to find elements
-            let teamANameElement = document.getElementById('h2h-team-a-name');
-            let teamBNameElement = document.getElementById('h2h-team-b-name');
-            let totalMatchesElement = document.getElementById('h2h-total-matches');
-            let teamAWinsElement = document.getElementById('h2h-team-a-wins');
-            let teamBWinsElement = document.getElementById('h2h-team-b-wins');
-            let teamARateElement = document.getElementById('h2h-team-a-rate');
-            let teamBRateElement = document.getElementById('h2h-team-b-rate');
-            
-            // If elements not found by ID, try querySelector
-            if (!teamANameElement) {
-                teamANameElement = document.querySelector('#h2h-team-a-name');
-            }
-            if (!teamBNameElement) {
-                teamBNameElement = document.querySelector('#h2h-team-b-name');
-            }
-            if (!totalMatchesElement) {
-                totalMatchesElement = document.querySelector('#h2h-total-matches');
-            }
-            if (!teamAWinsElement) {
-                teamAWinsElement = document.querySelector('#h2h-team-a-wins');
-            }
-            if (!teamBWinsElement) {
-                teamBWinsElement = document.querySelector('#h2h-team-b-wins');
-            }
-            if (!teamARateElement) {
-                teamARateElement = document.querySelector('#h2h-team-a-rate');
-            }
-            if (!teamBRateElement) {
-                teamBRateElement = document.querySelector('#h2h-team-b-rate');
-            }
-            
-            // Debug: Log which elements are found
-            console.log('Head-to-head elements found:', {
-                teamAName: !!teamANameElement,
-                teamBName: !!teamBNameElement,
-                totalMatches: !!totalMatchesElement,
-                teamAWins: !!teamAWinsElement,
-                teamBWins: !!teamBWinsElement,
-                teamARate: !!teamARateElement,
-                teamBRate: !!teamBRateElement
-            });
-            
-            if (teamANameElement && teamBNameElement && totalMatchesElement && 
-                teamAWinsElement && teamBWinsElement && teamARateElement && teamBRateElement) {
-                
-                teamANameElement.textContent = this.currentMatchDetails.teamA;
-                teamBNameElement.textContent = this.currentMatchDetails.teamB;
-                totalMatchesElement.textContent = '15';
-                teamAWinsElement.textContent = '8';
-                teamBWinsElement.textContent = '7';
-                teamARateElement.textContent = '53%';
-                teamBRateElement.textContent = '47%';
-                
-                console.log('Head-to-head data displayed successfully');
-            } else {
-                console.error('Some head-to-head elements not found. Missing elements:');
-                if (!teamANameElement) console.error('- h2h-team-a-name');
-                if (!teamBNameElement) console.error('- h2h-team-b-name');
-                if (!totalMatchesElement) console.error('- h2h-total-matches');
-                if (!teamAWinsElement) console.error('- h2h-team-a-wins');
-                if (!teamBWinsElement) console.error('- h2h-team-b-wins');
-                if (!teamARateElement) console.error('- h2h-team-a-rate');
-                if (!teamBRateElement) console.error('- h2h-team-b-rate');
-                
-                // Try to create elements if they don't exist
-                this.createHeadToHeadElements();
-            }
-        } catch (error) {
-            console.error('Error displaying head-to-head data:', error);
-        }
-    }
-    
-    createHeadToHeadElements() {
-        console.log('Creating head-to-head elements dynamically...');
-        
-        // Find the head-to-head section
-        const headToHeadSection = document.querySelector('.bg-gray-50.rounded-lg.p-3.border.border-gray-100');
-        if (!headToHeadSection) {
-            console.error('Head-to-head section not found');
-            return;
-        }
-        
-        // Create and populate elements
-        const teamAName = document.createElement('div');
-        teamAName.id = 'h2h-team-a-name';
-        teamAName.textContent = this.currentMatchDetails.teamA;
-        teamAName.className = 'text-2xs text-gray-700';
-        
-        const teamBName = document.createElement('div');
-        teamBName.id = 'h2h-team-b-name';
-        teamBName.textContent = this.currentMatchDetails.teamB;
-        teamBName.className = 'text-2xs text-gray-700';
-        
-        const totalMatches = document.createElement('div');
-        totalMatches.id = 'h2h-total-matches';
-        totalMatches.textContent = '15';
-        totalMatches.className = 'text-lg text-gray-700 font-bold';
-        
-        const teamAWins = document.createElement('div');
-        teamAWins.id = 'h2h-team-a-wins';
-        teamAWins.textContent = '8';
-        teamAWins.className = 'text-lg text-primary font-bold';
-        
-        const teamBWins = document.createElement('div');
-        teamBWins.id = 'h2h-team-b-wins';
-        teamBWins.textContent = '7';
-        teamBWins.className = 'text-lg text-primary font-bold';
-        
-        const teamARate = document.createElement('div');
-        teamARate.id = 'h2h-team-a-rate';
-        teamARate.textContent = '53%';
-        teamARate.className = 'text-green-700 text-xs';
-        
-        const teamBRate = document.createElement('div');
-        teamBRate.id = 'h2h-team-b-rate';
-        teamBRate.textContent = '47%';
-        teamBRate.className = 'text-orange-700 text-xs';
-        
-        console.log('Head-to-head elements created successfully');
-    }
 
     async loadVenueAnalysisData() {
         if (!this.currentMatchDetails) return;
 
         try {
-            // For now, use sample data to demonstrate the interface
-            // In production, you would fetch real data from the API
-            this.displayVenueData(null);
+            // Fetch real venue data from API
+            const venueStatsData = await this.fetchVenueStats();
+            this.displayVenueData(venueStatsData);
         } catch (error) {
             console.error('Error loading venue analysis data:', error);
             this.components.toast.showError('Failed to load venue analysis data');
@@ -713,14 +708,18 @@ class TabbedTeamAnalysisApp {
 
         if (!response.ok) throw new Error('Failed to fetch venue stats');
         const result = await response.json();
-        return result.success ? result.data : result;
+        return result; // Return the full result object
     }
 
     displayVenueData(data) {
         console.log('Displaying venue data...');
         
         try {
-            // Show sample data for demonstration
+            // Helper to get short name
+            const getShort = (name) => TabbedTeamAnalysisApp.TEAM_SHORT_NAMES[name] || name;
+            const teamAShort = getShort(this.currentMatchDetails.teamA);
+            const teamBShort = getShort(this.currentMatchDetails.teamB);
+            
             const venueNameElement = document.getElementById('venue-name');
             const venueLocationElement = document.getElementById('venue-location');
             const venuePitchTypeElement = document.getElementById('venue-pitch-type');
@@ -736,16 +735,38 @@ class TabbedTeamAnalysisApp {
                 venue1stInningsElement && venue2ndInningsElement && venueChaseSuccessElement &&
                 venueTeamARecordElement && venueTeamBRecordElement && venueTossStrategyElement && venueTossNoteElement) {
                 
-                venueNameElement.textContent = 'M. Chinnaswamy Stadium';
-                venueLocationElement.textContent = 'Bangalore, Karnataka';
-                venuePitchTypeElement.textContent = 'Batting Friendly';
-                venue1stInningsElement.textContent = '185';
-                venue2ndInningsElement.textContent = '165';
-                venueChaseSuccessElement.textContent = '45%';
-                venueTeamARecordElement.textContent = `${this.currentMatchDetails.teamA}: 8/12`;
-                venueTeamBRecordElement.textContent = `${this.currentMatchDetails.teamB}: 5/10`;
-                venueTossStrategyElement.textContent = 'Prefer Batting First';
-                venueTossNoteElement.textContent = 'Low chase success rate';
+                // Use real API data or fallback to sample data
+                if (data && data.success && data.data && data.data.venueStats) {
+                    const stats = data.data.venueStats;
+                    venueNameElement.textContent = stats.venue_name || 'Unknown Venue';
+                    venueLocationElement.textContent = stats.location || 'Unknown Location';
+                    venuePitchTypeElement.textContent = `${stats.pitch_type || 'Unknown'} ${stats.pitch_rating ? '(' + stats.pitch_rating + ')' : ''}`;
+                    venue1stInningsElement.textContent = stats.avg_first_innings_score || 'N/A';
+                    venue2ndInningsElement.textContent = stats.avg_second_innings_score || 'N/A';
+                    venueChaseSuccessElement.textContent = stats.chase_success_rate ? stats.chase_success_rate + '%' : 'N/A';
+                    
+                    // Handle team records from team_venue_performance
+                    const teamPerformance = stats.team_venue_performance || {};
+                    const teamARecord = teamPerformance[this.currentMatchDetails.teamA]?.record;
+                    const teamBRecord = teamPerformance[this.currentMatchDetails.teamB]?.record;
+                    
+                    venueTeamARecordElement.textContent = teamARecord ? `${teamAShort}: ${teamARecord}` : `${teamAShort}: N/A`;
+                    venueTeamBRecordElement.textContent = teamBRecord ? `${teamBShort}: ${teamBRecord}` : `${teamBShort}: N/A`;
+                    venueTossStrategyElement.textContent = stats.toss_decision_suggestion || 'N/A';
+                    venueTossNoteElement.textContent = stats.chase_success_rate ? `Chase success rate: ${stats.chase_success_rate}%` : 'N/A';
+                } else {
+                    // Fallback to sample data if API fails
+                    venueNameElement.textContent = 'M. Chinnaswamy Stadium';
+                    venueLocationElement.textContent = 'Bangalore, Karnataka';
+                    venuePitchTypeElement.textContent = 'Batting Friendly';
+                    venue1stInningsElement.textContent = '185';
+                    venue2ndInningsElement.textContent = '165';
+                    venueChaseSuccessElement.textContent = '45%';
+                    venueTeamARecordElement.textContent = `${teamAShort}: 8/12`;
+                    venueTeamBRecordElement.textContent = `${teamBShort}: 5/10`;
+                    venueTossStrategyElement.textContent = 'Prefer Batting First';
+                    venueTossNoteElement.textContent = 'Low chase success rate';
+                }
                 
                 console.log('Venue data displayed successfully');
             } else {
@@ -897,6 +918,75 @@ class TabbedTeamAnalysisApp {
             content.innerHTML = errorHtml;
         }
     }
+
+    // Mapping of full team names to short forms
+    static TEAM_SHORT_NAMES = {
+        'Chennai Super Kings': 'CSK',
+        'Mumbai Indians': 'MI',
+        'Royal Challengers Bengaluru': 'RCB',
+        'Sunrisers Hyderabad': 'SRH',
+        'Rajasthan Royals': 'RR',
+        'Delhi Capitals': 'DC',
+        'Kolkata Knight Riders': 'KKR',
+        'Punjab Kings': 'PBKS',
+        'Lucknow Super Giants': 'LSG',
+        'Gujarat Titans': 'GT',
+        // Add more as needed
+    };
+
+    // Team logo and external URL mapping
+    static TEAM_LOGOS = {
+        'Chennai Super Kings': { 
+            short: 'CSK', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/okceh51487601098.png/medium', 
+            fallbackColor: 'bg-yellow-500' 
+        },
+        'Mumbai Indians': { 
+            short: 'MI', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/l40j8p1487678631.png/medium',
+            fallbackColor: 'bg-blue-600' 
+        },
+        'Royal Challengers Bengaluru': { 
+            short: 'RCB', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/kynj5v1588331757.png/medium',
+            fallbackColor: 'bg-red-600' 
+        },
+        'Sunrisers Hyderabad': { 
+            short: 'SRH', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/sc7m161487419327.png/medium',
+            fallbackColor: 'bg-orange-500' 
+        },
+        'Rajasthan Royals': { 
+            short: 'RR', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/lehnfw1487601864.png/medium',
+            fallbackColor: 'bg-pink-500' 
+        },
+        'Delhi Capitals': { 
+            short: 'DC', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/dg4g0z1587334054.png/medium',
+            fallbackColor: 'bg-blue-500' 
+        },
+        'Kolkata Knight Riders': { 
+            short: 'KKR', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/ows99r1487678296.png/medium',
+            fallbackColor: 'bg-purple-600' 
+        },
+        'Punjab Kings': { 
+            short: 'PBKS', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/r1tcie1630697821.png/medium',
+            fallbackColor: 'bg-red-500' 
+        },
+        'Lucknow Super Giants': { 
+            short: 'LSG', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/4tzmfa1647445839.png/medium',
+            fallbackColor: 'bg-green-600' 
+        },
+        'Gujarat Titans': { 
+            short: 'GT', 
+            image: 'https://r2.thesportsdb.com/images/media/team/badge/6qw4r71654174508.png/medium',
+            fallbackColor: 'bg-blue-400' 
+        },
+    };
 }
 
 // Initialize the tabbed app when DOM is loaded

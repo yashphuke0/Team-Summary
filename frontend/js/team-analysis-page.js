@@ -408,16 +408,21 @@ class TeamAnalysisPage {
             if (venueStatsData.success && venueStatsData.data && venueStatsData.data.venueStats) {
                 const stats = venueStatsData.data.venueStats;
                 document.getElementById('venue-name').textContent = stats.venue_name || '';
-                document.getElementById('venue-location').textContent = stats.venue_location || '';
+                document.getElementById('venue-location').textContent = stats.location || '';
                 document.getElementById('venue-pitch-type').textContent = `${stats.pitch_type || ''} ${stats.pitch_rating ? '(' + stats.pitch_rating + ')' : ''}`;
                 document.getElementById('venue-1st-innings').textContent = stats.avg_first_innings_score || 'N/A';
                 document.getElementById('venue-2nd-innings').textContent = stats.avg_second_innings_score || 'N/A';
                 document.getElementById('venue-chase-success').textContent = stats.chase_success_rate ? stats.chase_success_rate + '%' : 'N/A';
-                // Team records: prefer backend, else N/A
-                document.getElementById('venue-team-a-record').textContent = stats.teamA_record ? `${teamAShort}: ${stats.teamA_record}` : `${teamAShort}: N/A`;
-                document.getElementById('venue-team-b-record').textContent = stats.teamB_record ? `${teamBShort}: ${stats.teamB_record}` : `${teamBShort}: N/A`;
-                document.getElementById('venue-toss-strategy').textContent = stats.toss_strategy || '';
-                document.getElementById('venue-toss-note').textContent = stats.toss_note || '';
+                
+                // Handle team records from team_venue_performance
+                const teamPerformance = stats.team_venue_performance || {};
+                const teamARecord = teamPerformance[this.currentMatchDetails.teamA]?.record;
+                const teamBRecord = teamPerformance[this.currentMatchDetails.teamB]?.record;
+                
+                document.getElementById('venue-team-a-record').textContent = teamARecord ? `${teamAShort}: ${teamARecord}` : `${teamAShort}: N/A`;
+                document.getElementById('venue-team-b-record').textContent = teamBRecord ? `${teamBShort}: ${teamBRecord}` : `${teamBShort}: N/A`;
+                document.getElementById('venue-toss-strategy').textContent = stats.toss_decision_suggestion || '';
+                document.getElementById('venue-toss-note').textContent = stats.chase_success_rate ? `Chase success rate: ${stats.chase_success_rate}%` : '';
             } else {
                 document.getElementById('venue-1st-innings').textContent = 'N/A';
                 document.getElementById('venue-2nd-innings').textContent = 'N/A';
