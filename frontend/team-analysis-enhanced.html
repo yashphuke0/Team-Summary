@@ -31,44 +31,96 @@
             </div>
         </section>
 
-        <!-- Match Context Section -->
-        <section id="match-context" class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in hidden">
-            <div class="flex items-center mb-3 sm:mb-4">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-info to-primary rounded flex items-center justify-center mr-2 sm:mr-3">
-                    <span class="text-white text-xs sm:text-sm font-bold">📊</span>
+        <!-- Match Context & Venue Analysis Section (Minimalist) -->
+        <section id="match-context" class="space-y-3 animate-fade-in">
+            <!-- Team Analysis Card: Recent Form & Head-to-Head -->
+            <div class="bg-white rounded-xl shadow border border-gray-200 p-3 card-hover flex flex-col gap-3">
+                <div class="flex items-center mb-1">
+                    <h2 class="text-s font-bold text-gray-900 font-primary tracking-wide">Team Analysis</h2>
                 </div>
-                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Match Context</h2>
-            </div>
-            
-            <!-- Head to Head -->
-            <div class="mb-4">
-                <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Head to Head</h3>
-                <div id="head-to-head" class="bg-blue-50 rounded p-3 text-sm">
-                    <!-- Head to head data will be populated here -->
-                </div>
-            </div>
-
-            <!-- Team Form -->
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Team A Form</h3>
-                    <div id="team-a-form" class="bg-green-50 rounded p-3 text-sm">
-                        <!-- Team A form will be populated here -->
+                <!-- Recent Form -->
+                <div class="bg-gray-50 rounded-lg p-2 flex flex-col gap-1 border border-gray-100">
+                    <div class="flex items-center mb-1">
+                        <span class="font-bold text-sm">Recent Form (Last 5 Matches)</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-medium text-center">
+                        <div class="flex flex-col gap-0.5 items-center border-r border-gray-200 pr-2">
+                            <div id="recent-form-team-a-name" class="font-semibold text-xs"></div>
+                            <div id="recent-form-team-a-seq" class="text-blue-700 font-bold tracking-wider text-sm"></div>
+                            <div id="recent-form-team-a-wins" class="text-gray-600 text-xs"></div>
+                            
+                        </div>
+                        <div class="flex flex-col gap-0.5 items-center pl-2">
+                            <div id="recent-form-team-b-name" class="font-semibold text-xs"></div>
+                            <div id="recent-form-team-b-seq" class="text-blue-700 font-bold tracking-wider text-sm"></div>
+                            <div id="recent-form-team-b-wins" class="text-gray-600 text-xs"></div>
+                            
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Team B Form</h3>
-                    <div id="team-b-form" class="bg-green-50 rounded p-3 text-sm">
-                        <!-- Team B form will be populated here -->
+                <!-- Head-to-Head Record -->
+                <div class="bg-gray-50 rounded-lg p-2 flex flex-col gap-1 border border-gray-100 mt-1">
+                    <div class="flex items-center mb-1">
+                        <span class="font-bold text-sm">Head-to-Head Record</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 items-end text-center text-xs font-semibold">
+                        <div class="flex flex-col gap-0.5 items-center border-r border-gray-200 pr-2">
+                            <div id="h2h-team-a-wins" class="text-lg text-primary"></div>
+                            <div id="h2h-team-a-name" class="text-2xs text-gray-700"></div>
+                        </div>
+                        <div class="flex flex-col gap-0.5 items-center">
+                            <div id="h2h-total-matches" class="text-lg text-gray-700"></div>
+                            <div class="text-2xs text-gray-700">Matches</div>
+                        </div>
+                        <div class="flex flex-col gap-0.5 items-center border-l border-gray-200 pl-2">
+                            <div id="h2h-team-b-wins" class="text-lg text-primary"></div>
+                            <div id="h2h-team-b-name" class="text-2xs text-gray-700"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-2xs sm:text-xs mt-1 text-center">
+                        <div id="h2h-team-a-rate" class="text-green-700 text-xs"></div>
+                        <div></div>
+                        <div id="h2h-team-b-rate" class="text-orange-700 text-xs"></div>
                     </div>
                 </div>
             </div>
-
-            <!-- Venue Stats -->
-            <div>
-                <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Venue Stats</h3>
-                <div id="venue-stats" class="bg-purple-50 rounded p-3 text-sm">
-                    <!-- Venue stats will be populated here -->
+            <!-- Venue Analysis Card -->
+            <div class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover flex flex-col gap-4">
+                <div class="flex items-center mb-2">
+                    
+                    <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Venue Analysis</h2>
+                </div>
+                <div class="text-center mb-2">
+                    <div id="venue-name" class="font-semibold text-sm sm:text-base"></div>
+                    <div id="venue-location" class="text-xs text-gray-500"></div>
+                    <div id="venue-pitch-type" class="text-xs font-bold text-gray-700 mt-1"></div>
+                </div>
+                <div class="flex flex-row justify-between text-center mb-2">
+                    <div class="flex-1">
+                        <div id="venue-1st-innings" class="text-lg font-bold text-primary"></div>
+                        <div class="text-xs text-black-600">1st Innings</div>
+                    </div>
+                    <div class="flex-1">
+                        <div id="venue-2nd-innings" class="text-lg font-bold text-primary"></div>
+                        <div class="text-xs text-black-600">2nd Innings</div>
+                    </div>
+                    <div class="flex-1">
+                        <div id="venue-chase-success" class="text-lg font-bold text-primary"></div>
+                        <div class="text-xs text-black-600">Chase Success</div>
+                    </div>
+                </div>
+                <div class="flex flex-row justify-between text-center mb-2">
+                    <div class="flex-1">
+                        <div id="venue-team-a-record" class="text-xs"></div>
+                    </div>
+                    <div class="flex-1">
+                        <div id="venue-team-b-record" class="text-xs"></div>
+                    </div>
+                </div>
+                <div class="text-center mt-2">
+                    <div class="font-semibold text-xs text-gray-700">Toss Strategy</div>
+                    <div id="venue-toss-strategy" class="text-sm font-bold text-primary"></div>
+                    <div id="venue-toss-note" class="text-xs text-gray-500"></div>
                 </div>
             </div>
         </section>

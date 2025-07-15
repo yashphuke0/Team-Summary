@@ -127,35 +127,129 @@ class TeamAnalysisPage {
         }
     }
 
+    // Mapping of full team names to short forms
+    static TEAM_SHORT_NAMES = {
+        'Chennai Super Kings': 'CSK',
+        'Mumbai Indians': 'MI',
+        'Royal Challengers Bengaluru': 'RCB',
+        'Sunrisers Hyderabad': 'SRH',
+        'Rajasthan Royals': 'RR',
+        'Delhi Capitals': 'DC',
+        'Kolkata Knight Riders': 'KKR',
+        'Punjab Kings': 'PBKS',
+        'Lucknow Super Giants': 'LSG',
+        'Gujarat Titans': 'GT',
+        // Add more as needed
+    };
+
     async loadMatchContext() {
         if (!this.currentMatchDetails) return;
-        
         try {
             const matchContextSection = document.getElementById('match-context');
             matchContextSection.classList.remove('hidden');
-            
-            // Show loading state
-            document.getElementById('head-to-head').innerHTML = '<div class="text-gray-500">Loading...</div>';
-            document.getElementById('team-a-form').innerHTML = '<div class="text-gray-500">Loading...</div>';
-            document.getElementById('team-b-form').innerHTML = '<div class="text-gray-500">Loading...</div>';
-            document.getElementById('venue-stats').innerHTML = '<div class="text-gray-500">Loading...</div>';
-            
+
             // Fetch match context data
             const [teamFormData, headToHeadData, venueStatsData] = await Promise.all([
                 this.fetchTeamForm(),
                 this.fetchHeadToHead(),
                 this.fetchVenueStats()
             ]);
-            
-            // Display head-to-head data
-            this.displayHeadToHead(headToHeadData);
-            
-            // Display team form data
-            this.displayTeamForm(teamFormData);
-            
-            // Display venue stats
-            this.displayVenueStats(venueStatsData);
-            
+
+            // Helper to get short name
+            const getShort = (name) => TeamAnalysisPage.TEAM_SHORT_NAMES[name] || name;
+            const teamAShort = getShort(this.currentMatchDetails.teamA);
+            const teamBShort = getShort(this.currentMatchDetails.teamB);
+
+            // --- Recent Form ---
+            document.getElementById('recent-form-team-a-name').textContent = teamAShort;
+            document.getElementById('recent-form-team-b-name').textContent = teamBShort;
+            if (teamFormData.success && teamFormData.data) {
+                const teamA = teamFormData.data.teamA;
+                const teamB = teamFormData.data.teamB;
+                // Calculate wins if not provided or 0
+                let teamAWins = (teamA && teamA.wins) ? teamA.wins : (teamA && teamA.matches ? teamA.matches.filter(m => m.result === 'Win').length : null);
+                let teamBWins = (teamB && teamB.wins) ? teamB.wins : (teamB && teamB.matches ? teamB.matches.filter(m => m.result === 'Win').length : null);
+                // Show N/A if no data
+                document.getElementById('recent-form-team-a-wins').textContent = (teamAWins !== null && teamAWins !== undefined) ? `${teamAWins}/5 wins` : 'N/A';
+                document.getElementById('recent-form-team-b-wins').textContent = (teamBWins !== null && teamBWins !== undefined) ? `${teamBWins}/5 wins` : 'N/A';
+                // Form sequence
+                if (teamA && teamA.matches) {
+                    const formSeqHtml = teamA.matches.map(m => {
+                        if (m.result === 'Win') return '<span class="text-green-600 font-bold">W</span>';
+                        if (m.result === 'Loss') return '<span class="text-red-600 font-bold">L</span>';
+                        return '<span>' + (m.result ? m.result[0] : '-') + '</span>';
+                    }).join('<span class="mx-0.5 text-gray-400">-</span>');
+                    document.getElementById('recent-form-team-a-seq').innerHTML = formSeqHtml;
+                }
+                if (teamB && teamB.matches) {
+                    const formSeqHtml = teamB.matches.map(m => {
+                        if (m.result === 'Win') return '<span class="text-green-600 font-bold">W</span>';
+                        if (m.result === 'Loss') return '<span class="text-red-600 font-bold">L</span>';
+                        return '<span>' + (m.result ? m.result[0] : '-') + '</span>';
+                    }).join('<span class="mx-0.5 text-gray-400">-</span>');
+                    document.getElementById('recent-form-team-b-seq').innerHTML = formSeqHtml;
+                }
+            } else {
+                document.getElementById('recent-form-team-a-wins').textContent = 'N/A';
+                document.getElementById('recent-form-team-b-wins').textContent = 'N/A';
+            }
+            // --- Head-to-Head ---
+            if (headToHeadData.success && headToHeadData.data) {
+                const teamAWins = headToHeadData.data.teamAWins;
+                const teamBWins = headToHeadData.data.teamBWins;
+                const totalMatches = headToHeadData.data.totalMatches;
+                // Prefer backend win rates, else calculate
+                let teamAWinRate = (typeof headToHeadData.data.teamAWinRate === 'number') ? headToHeadData.data.teamAWinRate : (totalMatches ? Math.round((teamAWins / totalMatches) * 100) : null);
+                let teamBWinRate = (typeof headToHeadData.data.teamBWinRate === 'number') ? headToHeadData.data.teamBWinRate : (totalMatches ? Math.round((teamBWins / totalMatches) * 100) : null);
+                document.getElementById('h2h-team-a-wins').textContent = teamAWins !== undefined ? teamAWins : 'N/A';
+                document.getElementById('h2h-team-b-wins').textContent = teamBWins !== undefined ? teamBWins : 'N/A';
+                document.getElementById('h2h-total-matches').textContent = totalMatches !== undefined ? totalMatches : 'N/A';
+                document.getElementById('h2h-team-a-name').textContent = teamAShort;
+                document.getElementById('h2h-team-b-name').textContent = teamBShort;
+                document.getElementById('h2h-team-a-rate').textContent = (teamAWinRate !== null && teamAWinRate !== undefined) ? `${teamAWinRate}% win rate` : 'N/A';
+                document.getElementById('h2h-team-b-rate').textContent = (teamBWinRate !== null && teamBWinRate !== undefined) ? `${teamBWinRate}% win rate` : 'N/A';
+            } else {
+                document.getElementById('h2h-team-a-wins').textContent = 'N/A';
+                document.getElementById('h2h-team-b-wins').textContent = 'N/A';
+                document.getElementById('h2h-total-matches').textContent = 'N/A';
+                document.getElementById('h2h-team-a-rate').textContent = 'N/A';
+                document.getElementById('h2h-team-b-rate').textContent = 'N/A';
+            }
+            // --- Venue Analysis ---
+            if (venueStatsData.success && venueStatsData.data && venueStatsData.data.venueStats) {
+                const stats = venueStatsData.data.venueStats;
+                document.getElementById('venue-name').textContent = stats.venue_name || '';
+                document.getElementById('venue-location').textContent = stats.venue_location || '';
+                document.getElementById('venue-pitch-type').textContent = `${stats.pitch_type || ''} ${stats.pitch_rating ? '(' + stats.pitch_rating + ')' : ''}`;
+                document.getElementById('venue-1st-innings').textContent = stats.avg_first_innings_score || 'N/A';
+                document.getElementById('venue-2nd-innings').textContent = stats.avg_second_innings_score || 'N/A';
+                document.getElementById('venue-chase-success').textContent = stats.chase_success_rate ? stats.chase_success_rate + '%' : 'N/A';
+                // Team records: prefer backend, else N/A
+                document.getElementById('venue-team-a-record').textContent = stats.teamA_record ? `${teamAShort}: ${stats.teamA_record}` : `${teamAShort}: N/A`;
+                document.getElementById('venue-team-b-record').textContent = stats.teamB_record ? `${teamBShort}: ${stats.teamB_record}` : `${teamBShort}: N/A`;
+                document.getElementById('venue-toss-strategy').textContent = stats.toss_strategy || '';
+                document.getElementById('venue-toss-note').textContent = stats.toss_note || '';
+            } else {
+                document.getElementById('venue-1st-innings').textContent = 'N/A';
+                document.getElementById('venue-2nd-innings').textContent = 'N/A';
+                document.getElementById('venue-chase-success').textContent = 'N/A';
+                document.getElementById('venue-team-a-record').textContent = `${teamAShort}: N/A`;
+                document.getElementById('venue-team-b-record').textContent = `${teamBShort}: N/A`;
+            }
+
+            // Set font-family: inter for all inner context text
+            [
+                'recent-form-team-a-name', 'recent-form-team-b-name', 'recent-form-team-a-seq', 'recent-form-team-b-seq',
+                'recent-form-team-a-wins', 'recent-form-team-b-wins',
+                'h2h-team-a-wins', 'h2h-team-b-wins', 'h2h-total-matches',
+                'h2h-team-a-name', 'h2h-team-b-name', 'h2h-team-a-rate', 'h2h-team-b-rate',
+                'venue-name', 'venue-location', 'venue-pitch-type',
+                'venue-1st-innings', 'venue-2nd-innings', 'venue-chase-success',
+                'venue-team-a-record', 'venue-team-b-record', 'venue-toss-strategy', 'venue-toss-note'
+            ].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.fontFamily = 'Inter, sans-serif';
+            });
         } catch (error) {
             console.error('Error loading match context:', error);
             this.components.toast.showError('Failed to load match context');
