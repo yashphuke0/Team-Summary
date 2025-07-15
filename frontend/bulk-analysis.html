@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi Team Analysis - cricbuzz11 Team Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<<<<<<< HEAD
     <script src="js/utils/tailwind-config.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -34,9 +35,32 @@
             </div>
         </div>
     </header>
+=======
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/app.css">
+    <script>
+    </script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-cricket">
+    <div id="app-header"></div>
+    <script src="js/components/AppHeader.js"></script>
+>>>>>>> e5c402bf8be767639b2f0841826082ace213c174
 
     <!-- Main Content with Enhanced Spacing -->
     <main class="max-w-md mx-auto px-4 py-6 space-y-6">
+        <!-- Team Mode Toggle Buttons -->
+        <div class="flex justify-center mb-6">
+            <div class="flex bg-white rounded-full shadow border border-gray-200 p-2 gap-2">
+                <a href="index.html"
+                   class="flex items-center px-4 py-1.5 rounded-full font-bold text-sm transition-all duration-200 focus:outline-none border-2 border-[#009270] text-[#009270] bg-white hover:bg-[#009270]/10 focus:bg-[#009270]/10"
+                   style="border-color: #009270;">
+                    <span class="mr-1">👤</span> Single Team
+                </a>
+                <span class="flex items-center px-4 py-1.5 rounded-full font-bold text-sm text-white bg-[#009270] border-2 border-[#009270] cursor-default select-none">
+                    <span class="mr-1">👥</span> Multi Team
+                </span>
+            </div>
+        </div>
         
         <!-- Match Details Section - FIRST STEP -->
         <section class="bg-white rounded-xl shadow-cricket border border-gray-200 p-6 card-hover animate-fade-in">
