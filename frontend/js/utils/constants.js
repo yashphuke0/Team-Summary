@@ -1,5 +1,7 @@
 // Application Constants
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3001/api' 
+    : '/api';
 
 // IPL 2025 Teams
 const IPL_TEAMS = [

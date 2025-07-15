@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const path = require('path');
 const { limiter } = require('./middleware/rateLimiter');
 
 const ocrRoutes = require('./routes/ocr');
@@ -39,12 +40,21 @@ app.use('/api', headToHeadRoutes);
 app.use('/api', playerPerformanceRoutes);
 app.use('/api', venueStatsRoutes);
 
-// 404 handler
-app.use('*', (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Endpoint not found'
-    });
+// Serve static files from frontend directory
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Serve index.html for all non-API routes
+app.get('*', (req, res) => {
+    // Don't serve frontend for API routes
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({
+            success: false,
+            message: 'Endpoint not found'
+        });
+    }
+    
+    // Serve frontend for all other routes
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // Start server
