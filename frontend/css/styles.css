@@ -88,6 +88,83 @@
     overflow: hidden;
 }
 
+/* Enhanced Modal Styles */
+.modal-backdrop {
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-container {
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #137f66 0%, #137f66 90%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #f59e0b 90%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.modal-close-btn {
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+}
+
+.modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-input {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.modal-input:focus {
+    background: white;
+    border-color: #137f66;
+    box-shadow: 0 0 0 3px rgba(19, 127, 102, 0.1);
+}
+
+.modal-list {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    max-height: 16rem;
+    overflow-y: auto;
+}
+
+.modal-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.modal-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.modal-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 /* Player validation card animations */
 .player-card-enter {
     opacity: 0;

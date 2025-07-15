@@ -242,33 +242,38 @@
     </div>
 
     <!-- Player Override Modal -->
-    <div id="player-override-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
-        <div class="bg-white rounded shadow-2xl w-full max-w-sm max-h-[85vh] overflow-hidden animate-scale-in">
+    <div id="player-override-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[85vh] overflow-hidden animate-scale-in border border-gray-100">
             <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-warning to-primary text-white p-3 sm:p-4">
+            <div class="bg-gradient-to-r from-primary/90 to-primary/80 text-white px-4 py-4 border-b border-white/10">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-base sm:text-lg font-bold">🔍 Player Override</h3>
-                    <button id="close-override-modal" class="text-white/80 hover:text-white transition-colors">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center">
+                        
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Player Override</h3>
+                            <p class="text-white/80 text-sm mt-0.5">Select the correct player from database</p>
+                        </div>
+                    </div>
+                    <button id="close-override-modal" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
-                <p class="text-white/90 text-xs sm:text-sm mt-1 font-inter">Select the correct player from database</p>
             </div>
 
             <!-- Modal Content -->
-            <div class="p-3 sm:p-4">
+            <div class="p-4">
                 <div id="override-modal-content">
                     <!-- Content will be populated dynamically -->
                 </div>
                 
                 <!-- Action Buttons -->
-                <div class="flex gap-2 sm:gap-3 mt-4">
-                    <button id="save-override" class="flex-1 bg-primary text-white py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-primary/90 transition-colors text-sm">
+                <div class="flex gap-3 mt-4">
+                    <button id="save-override" class="flex-1 bg-primary text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm">
                         Save Changes
                     </button>
-                    <button id="cancel-override" class="flex-1 bg-gray-200 text-gray-700 py-2.5 sm:py-3 px-4 rounded font-semibold hover:bg-gray-300 transition-colors text-sm">
+                    <button id="cancel-override" class="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-200 transition-colors text-sm">
                         Cancel
                     </button>
                 </div>
