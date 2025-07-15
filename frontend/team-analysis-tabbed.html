@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Analysis - cricbuzz11</title>
+    <link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/utils/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-primary">
+    <!-- Header -->
+    <div id="app-header"></div>
+    <script src="js/components/AppHeader.js"></script>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-sm mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 mobile-padding">
+        
+        <!-- Match Details Section -->
+        <section class="bg-white rounded shadow-cricket border mt-4 border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
+            <div class="flex items-center mb-3 sm:mb-4">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded flex items-center justify-center mr-2 sm:mr-3">
+                    <span class="text-white text-xs sm:text-sm font-bold">⚡</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 font-primary">Match Details</h2>
+            </div>
+            
+            <div id="match-info" class="space-y-2">
+                <!-- Match details will be populated here -->
+            </div>
+        </section>
+
+        <!-- Tabbed Analysis Interface -->
+        <section class="bg-white rounded shadow-cricket border border-gray-200 p-4 sm:p-6 card-hover animate-fade-in">
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-gray-200 mb-4">
+                <button id="team-analysis-tab" class="flex-1 py-2 px-3 text-sm font-medium border-b-2 border-primary text-primary transition-all duration-200">
+                    📊 Team Analysis
+                </button>
+                <button id="venue-analysis-tab" class="flex-1 py-2 px-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all duration-200">
+                    🏟️ Venue Analysis
+                </button>
+                <button id="team-details-tab" class="flex-1 py-2 px-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all duration-200">
+                    👤 Team Details
+                </button>
+                <button id="teams-summary-tab" class="flex-1 py-2 px-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all duration-200">
+                    📈 Teams Summary
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab-content" class="min-h-[400px]">
+                
+                <!-- Team Analysis Tab -->
+                <div id="team-analysis-content" class="tab-panel active">
+                    <div class="space-y-4">
+                        <!-- Recent Form Section -->
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <div class="flex items-center mb-2">
+                                <span class="font-bold text-sm text-gray-900">Recent Form (Last 5 Matches)</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-xs font-medium text-center">
+                                <div class="flex flex-col gap-1 items-center border-r border-gray-200 pr-3">
+                                    <div id="recent-form-team-a-name" class="font-semibold text-xs text-gray-700"></div>
+                                    <div id="recent-form-team-a-seq" class="text-blue-700 font-bold tracking-wider text-sm"></div>
+                                    <div id="recent-form-team-a-wins" class="text-gray-600 text-xs"></div>
+                                </div>
+                                <div class="flex flex-col gap-1 items-center pl-3">
+                                    <div id="recent-form-team-b-name" class="font-semibold text-xs text-gray-700"></div>
+                                    <div id="recent-form-team-b-seq" class="text-blue-700 font-bold tracking-wider text-sm"></div>
+                                    <div id="recent-form-team-b-wins" class="text-gray-600 text-xs"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Head-to-Head Section -->
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <div class="flex items-center mb-2">
+                                <span class="font-bold text-sm text-gray-900">Head-to-Head Record</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 items-end text-center text-xs font-semibold">
+                                <div class="flex flex-col gap-1 items-center border-r border-gray-200 pr-2">
+                                    <div id="h2h-team-a-wins" class="text-lg text-primary font-bold"></div>
+                                    <div id="h2h-team-a-name" class="text-xs text-gray-700"></div>
+                                </div>
+                                <div class="flex flex-col gap-1 items-center">
+                                    <div id="h2h-total-matches" class="text-lg text-gray-700 font-bold"></div>
+                                    <div class="text-xs text-gray-700">Matches</div>
+                                </div>
+                                <div class="flex flex-col gap-1 items-center border-l border-gray-200 pl-2">
+                                    <div id="h2h-team-b-wins" class="text-lg text-primary font-bold"></div>
+                                    <div id="h2h-team-b-name" class="text-xs text-gray-700"></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-xs mt-2 text-center">
+                                <div id="h2h-team-a-rate" class="text-green-700 text-xs"></div>
+                                <div></div>
+                                <div id="h2h-team-b-rate" class="text-orange-700 text-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Venue Analysis Tab -->
+                <div id="venue-analysis-content" class="tab-panel hidden">
+                    <div class="space-y-4">
+                        <!-- Venue Info -->
+                        <div class="text-center mb-4">
+                            <div id="venue-name" class="font-semibold text-sm sm:text-base text-gray-900"></div>
+                            <div id="venue-location" class="text-xs text-gray-500"></div>
+                            <div id="venue-pitch-type" class="text-xs font-bold text-gray-700 mt-1"></div>
+                        </div>
+
+                        <!-- Venue Stats -->
+                        <div class="grid grid-cols-3 gap-3 text-center">
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <div id="venue-1st-innings" class="text-lg font-bold text-primary"></div>
+                                <div class="text-xs text-gray-600">1st Innings</div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <div id="venue-2nd-innings" class="text-lg font-bold text-primary"></div>
+                                <div class="text-xs text-gray-600">2nd Innings</div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <div id="venue-chase-success" class="text-lg font-bold text-primary"></div>
+                                <div class="text-xs text-gray-600">Chase Success</div>
+                            </div>
+                        </div>
+
+                        <!-- Team Records at Venue -->
+                        <div class="grid grid-cols-2 gap-3 text-center">
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <div id="venue-team-a-record" class="text-xs text-gray-700"></div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <div id="venue-team-b-record" class="text-xs text-gray-700"></div>
+                            </div>
+                        </div>
+
+                        <!-- Toss Strategy -->
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 text-center">
+                            <div class="font-semibold text-xs text-gray-700 mb-1">Toss Strategy</div>
+                            <div id="venue-toss-strategy" class="text-sm font-bold text-primary"></div>
+                            <div id="venue-toss-note" class="text-xs text-gray-500 mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Details Tab -->
+                <div id="team-details-content" class="tab-panel hidden">
+                    <div class="space-y-4">
+                        <!-- Team Selector -->
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Select Team</label>
+                            <select id="team-selector" class="w-full p-3 border-2 border-gray-200 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
+                                <option value="">Choose a team to configure captain/vice-captain</option>
+                            </select>
+                        </div>
+
+                        <!-- Team Details -->
+                        <div id="team-details" class="hidden space-y-4">
+                            <!-- Players List -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">Team Players:</h3>
+                                <div id="players-list" class="bg-gray-50 rounded p-3 text-sm space-y-2"></div>
+                            </div>
+
+                            <!-- Player Override Section -->
+                            <div id="player-override-section" class="hidden">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-2 font-primary">⚠️ Player Override Required</h3>
+                                <p class="text-xs text-gray-600 mb-3">Some players couldn't be matched. Please select the correct players:</p>
+                                <div id="override-players-list" class="space-y-2"></div>
+                            </div>
+
+                            <!-- Captain/Vice-Captain Selection -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Captain</label>
+                                    <select id="captain-select" class="w-full p-3 border-2 border-gray-200 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
+                                        <option value="">Select Captain</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Vice-Captain</label>
+                                    <select id="vice-captain-select" class="w-full p-3 border-2 border-gray-200 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white text-sm">
+                                        <option value="">Select Vice-Captain</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teams Summary Tab -->
+                <div id="teams-summary-content" class="tab-panel hidden">
+                    <div class="space-y-4">
+                        <!-- Teams Summary -->
+                        <div id="teams-summary-list" class="space-y-3">
+                            <!-- Teams will be displayed here -->
+                        </div>
+
+                        <!-- Analysis Buttons -->
+                        <div class="space-y-3">
+                            <button id="analyze-all-btn" class="w-full bg-primary text-white py-3 px-4 rounded font-semibold hover:bg-primary/90 transition-all duration-300 shadow-lg text-sm sm:text-base">
+                                🏆 Analyze All Teams
+                            </button>
+                            <p class="text-xs text-gray-500 text-center font-inter">Analyzes all teams with captain/vice-captain selections</p>
+                            
+                            <button id="compare-teams-btn" class="w-full bg-secondary text-white py-3 px-4 rounded font-semibold hover:bg-secondary/90 transition-all duration-300 shadow-lg text-sm sm:text-base">
+                                📈 Compare Teams
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Messages -->
+    <div id="error-toast" class="fixed bottom-4 left-4 right-4 max-w-sm mx-auto bg-red-600 text-white p-3 sm:p-4 rounded shadow-lg transform translate-y-full transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <div class="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <span id="error-message" class="font-medium text-sm sm:text-base"></span>
+        </div>
+    </div>
+
+    <div id="success-toast" class="fixed bottom-4 left-4 right-4 max-w-sm mx-auto bg-green-600 text-white p-3 sm:p-4 rounded shadow-lg transform translate-y-full transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <div class="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <span id="success-message" class="font-medium text-sm sm:text-base"></span>
+        </div>
+    </div>
+
+    <!-- Load Scripts -->
+    <script src="js/utils/constants.js?v=1"></script>
+    <script src="js/components/Toast.js?v=1"></script>
+    <script src="js/components/MatchValidation.js?v=1"></script>
+    <script src="js/components/PlayerValidation.js?v=1"></script>
+    <script src="js/components/FileUpload.js?v=1"></script>
+    <script src="js/components/TeamAnalysis.js?v=1"></script>
+    <script src="js/team-analysis-tabbed.js?v=7"></script>
+    <script src="js/components/appFooter.js?v=1"></script>
+    <div id="app-footer"></div>
+</body>
+</html> 

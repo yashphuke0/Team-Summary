@@ -198,4 +198,33 @@
 
 .font-inter {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'sans-serif';
+}
+
+/* Tabbed Interface Styles */
+.tab-panel {
+    transition: all 0.3s ease-in-out;
+}
+
+.tab-panel.active {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Tab button hover effects */
+.tab-button:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Improved tab content spacing */
+.tab-content {
+    min-height: 400px;
+}
+
+/* Card hover effects for analysis sections */
+.analysis-card {
+    transition: all 0.2s ease-in-out;
+}
+
+.analysis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 } 
